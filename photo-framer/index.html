@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Framer - Create Print-Ready Framed Photos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Photo Framer</h1>
+            <p>Upload, frame, and download your photos</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-box">
+                    <input type="file" id="photoUpload" accept="image/*" hidden>
+                    <label for="photoUpload" class="upload-label">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span>Click to Upload Photo</span>
+                        <small>or drag and drop</small>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Editor Section -->
+            <div class="editor-section" id="editorSection" style="display: none;">
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="frameSize">Frame Size:</label>
+                        <select id="frameSize">
+                            <option value="4x6">4x6 inches</option>
+                            <option value="5x7">5x7 inches</option>
+                            <option value="8x10" selected>8x10 inches</option>
+                            <option value="11x14">11x14 inches</option>
+                            <option value="16x20">16x20 inches</option>
+                            <option value="18x24">18x24 inches</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Orientation:</label>
+                        <div class="orientation-controls">
+                            <button id="portraitBtn" class="orientation-btn active">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="7" y="2" width="10" height="20" rx="2"></rect>
+                                </svg>
+                                <span>Portrait</span>
+                            </button>
+                            <button id="landscapeBtn" class="orientation-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="7" width="20" height="10" rx="2"></rect>
+                                </svg>
+                                <span>Landscape</span>
+                            </button>
+                        </div>
+                        <small class="orientation-hint" id="orientationHint"></small>
+                    </div>
+
+
+                    <div class="control-group">
+                        <label for="zoomSlider">Zoom: <span id="zoomValue">100</span>%</label>
+                        <input type="range" id="zoomSlider" min="100" max="300" value="100" step="1">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Position:</label>
+                        <div class="position-controls">
+                            <button id="resetPosition" class="btn-secondary">Reset Position</button>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="downloadBtn" class="btn-primary">Download Framed Photo</button>
+                        <button id="uploadNewBtn" class="btn-secondary">Upload New Photo</button>
+                    </div>
+                </div>
+
+                <div class="preview-container">
+                    <div class="frame-wrapper" id="frameWrapper">
+                        <div class="frame" id="frame">
+                            <div class="canvas-container" id="canvasContainer">
+                                <canvas id="photoCanvas"></canvas>
+                                <canvas id="cropOverlay"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="preview-note">Drag the photo to reposition • Use zoom slider to resize • Darker areas will be cropped</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
