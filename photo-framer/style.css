@@ -97,6 +97,75 @@ header p {
     gap: 40px;
 }
 
+/* Resolution Warning */
+.resolution-warning {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 20px;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe8a1 100%);
+    border: 2px solid #ffc107;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.warning-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.warning-content {
+    flex: 1;
+}
+
+.warning-content strong {
+    display: block;
+    color: #856404;
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.warning-content p {
+    color: #856404;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.warning-close {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    color: #856404;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+.warning-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
 .controls {
     display: flex;
     flex-direction: column;

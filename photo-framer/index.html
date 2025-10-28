@@ -32,6 +32,16 @@
 
             <!-- Editor Section -->
             <div class="editor-section" id="editorSection" style="display: none;">
+                <!-- Resolution Warning Notification -->
+                <div class="resolution-warning" id="resolutionWarning" style="display: none;">
+                    <div class="warning-icon">⚠️</div>
+                    <div class="warning-content">
+                        <strong>Image Resolution Warning</strong>
+                        <p id="warningMessage"></p>
+                    </div>
+                    <button class="warning-close" id="closeWarning">&times;</button>
+                </div>
+
                 <div class="controls">
                     <div class="control-group">
                         <label for="frameSize">Frame Size:</label>

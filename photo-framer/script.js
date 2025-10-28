@@ -9,6 +9,9 @@ const FRAME_SIZES = {
     '18x24': { width: 5400, height: 7200 }
 };
 
+// Minimum DPI threshold for print quality
+const MIN_DPI = 150;
+
 // Get frame dimensions based on size and orientation
 function getFrameDimensions(size, orientation) {
     const baseSize = FRAME_SIZES[size];
@@ -49,6 +52,9 @@ const uploadLabel = document.querySelector('.upload-label');
 const portraitBtn = document.getElementById('portraitBtn');
 const landscapeBtn = document.getElementById('landscapeBtn');
 const orientationHint = document.getElementById('orientationHint');
+const resolutionWarning = document.getElementById('resolutionWarning');
+const warningMessage = document.getElementById('warningMessage');
+const closeWarningBtn = document.getElementById('closeWarning');
 
 // Initialize event listeners
 function init() {
@@ -71,6 +77,9 @@ function init() {
     portraitBtn.addEventListener('click', () => handleOrientationChange('portrait'));
     landscapeBtn.addEventListener('click', () => handleOrientationChange('landscape'));
     
+    // Warning close button
+    closeWarningBtn.addEventListener('click', hideResolutionWarning);
+    
     // Canvas dragging
     photoCanvas.addEventListener('mousedown', startDrag);
     photoCanvas.addEventListener('mousemove', drag);
@@ -81,6 +90,96 @@ function init() {
     photoCanvas.addEventListener('touchstart', handleTouchStart);
     photoCanvas.addEventListener('touchmove', handleTouchMove);
     photoCanvas.addEventListener('touchend', endDrag);
+}
+
+// DPI Calculation and Resolution Check Functions
+function calculateEffectiveDPI(imageWidth, imageHeight, frameSize, orientation) {
+    const dimensions = getFrameDimensions(frameSize, orientation);
+    
+    // Calculate physical dimensions in inches
+    const frameSizeParts = frameSize.split('x');
+    const physicalWidth = orientation === 'portrait' ? 
+        parseInt(frameSizeParts[0]) : parseInt(frameSizeParts[1]);
+    const physicalHeight = orientation === 'portrait' ? 
+        parseInt(frameSizeParts[1]) : parseInt(frameSizeParts[0]);
+    
+    // Calculate DPI for both dimensions
+    const dpiWidth = imageWidth / physicalWidth;
+    const dpiHeight = imageHeight / physicalHeight;
+    
+    // Return the minimum DPI (worst case)
+    return Math.min(dpiWidth, dpiHeight);
+}
+
+function checkResolution() {
+    if (!state.uploadedImage) return;
+    
+    const img = state.uploadedImage;
+    const effectiveDPI = calculateEffectiveDPI(
+        img.width, 
+        img.height, 
+        state.frameSize, 
+        state.orientation
+    );
+    
+    if (effectiveDPI < MIN_DPI) {
+        showResolutionWarning(effectiveDPI);
+    } else {
+        hideResolutionWarning();
+    }
+}
+
+function showResolutionWarning(currentDPI) {
+    const img = state.uploadedImage;
+    const dimensions = getFrameDimensions(state.frameSize, state.orientation);
+    
+    // Calculate recommended minimum resolution
+    const frameSizeParts = state.frameSize.split('x');
+    const physicalWidth = state.orientation === 'portrait' ? 
+        parseInt(frameSizeParts[0]) : parseInt(frameSizeParts[1]);
+    const physicalHeight = state.orientation === 'portrait' ? 
+        parseInt(frameSizeParts[1]) : parseInt(frameSizeParts[0]);
+    
+    const recommendedWidth = physicalWidth * MIN_DPI;
+    const recommendedHeight = physicalHeight * MIN_DPI;
+    
+    // Find suggested smaller frame sizes
+    const suggestedSizes = findSuitableFrameSizes(img.width, img.height, state.orientation);
+    
+    let message = `Your image resolution is ${Math.round(currentDPI)} DPI, which is below the recommended ${MIN_DPI} DPI for print quality. `;
+    message += `This may result in a pixelated or blurry print for the selected ${state.frameSize}" ${state.orientation} frame.<br><br>`;
+    message += `<strong>Current image:</strong> ${img.width} × ${img.height} pixels<br>`;
+    message += `<strong>Recommended for ${state.frameSize}":</strong> ${recommendedWidth} × ${recommendedHeight} pixels (${MIN_DPI} DPI)<br><br>`;
+    
+    if (suggestedSizes.length > 0) {
+        message += `<strong>Suggestions:</strong><br>`;
+        message += `• Upload a higher-resolution image (at least ${recommendedWidth} × ${recommendedHeight} pixels)<br>`;
+        message += `• Choose a smaller frame size: ${suggestedSizes.join(', ')}`;
+    } else {
+        message += `<strong>Suggestion:</strong> Upload a higher-resolution image (at least ${recommendedWidth} × ${recommendedHeight} pixels)`;
+    }
+    
+    warningMessage.innerHTML = message;
+    resolutionWarning.style.display = 'flex';
+}
+
+function hideResolutionWarning() {
+    resolutionWarning.style.display = 'none';
+}
+
+function findSuitableFrameSizes(imageWidth, imageHeight, orientation) {
+    const suitableSizes = [];
+    
+    for (const [size, dimensions] of Object.entries(FRAME_SIZES)) {
+        const frameDims = getFrameDimensions(size, orientation);
+        const dpi = calculateEffectiveDPI(imageWidth, imageHeight, size, orientation);
+        
+        if (dpi >= MIN_DPI) {
+            suitableSizes.push(`${size}"`);
+        }
+    }
+    
+    return suitableSizes;
 }
 
 // File handling
@@ -132,6 +231,9 @@ function loadImage(file) {
             
             showEditor();
             updateCanvas();
+            
+            // Check resolution after image is loaded
+            checkResolution();
         };
         img.src = e.target.result;
     };
@@ -165,6 +267,9 @@ function handleOrientationChange(orientation) {
     
     // Clear hint when manually changed
     orientationHint.textContent = '';
+    
+    // Check resolution when orientation changes
+    checkResolution();
 }
 
 // Update orientation button states
@@ -206,6 +311,9 @@ function uploadNew() {
 function handleFrameSizeChange(e) {
     state.frameSize = e.target.value;
     updateCanvas();
+    
+    // Check resolution when frame size changes
+    checkResolution();
 }
 
 function setupCanvas() {
