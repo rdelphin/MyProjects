@@ -1,0 +1,52 @@
+{
+  "frames": [
+    {
+      "id": "4x6",
+      "size": "4x6",
+      "width": 1200,
+      "height": 1800,
+      "price": 15.99,
+      "available": true
+    },
+    {
+      "id": "5x7",
+      "size": "5x7",
+      "width": 1500,
+      "height": 2100,
+      "price": 22.99,
+      "available": true
+    },
+    {
+      "id": "8x10",
+      "size": "8x10",
+      "width": 2400,
+      "height": 3000,
+      "price": 29.99,
+      "available": true
+    },
+    {
+      "id": "11x14",
+      "size": "11x14",
+      "width": 3300,
+      "height": 4200,
+      "price": 39.99,
+      "available": true
+    },
+    {
+      "id": "16x20",
+      "size": "16x20",
+      "width": 4800,
+      "height": 6000,
+      "price": 54.99,
+      "available": true
+    },
+    {
+      "id": "18x24",
+      "size": "18x24",
+      "width": 5400,
+      "height": 7200,
+      "price": 69.99,
+      "available": true
+    }
+  ]
+}

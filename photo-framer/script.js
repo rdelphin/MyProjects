@@ -1,13 +1,15 @@
-// Frame size configurations (in pixels at 300 DPI for print quality)
-// Each size stores portrait dimensions; landscape will swap width/height
-const FRAME_SIZES = {
-    '4x6': { width: 1200, height: 1800 },
-    '5x7': { width: 1500, height: 2100 },
-    '8x10': { width: 2400, height: 3000 },
-    '11x14': { width: 3300, height: 4200 },
-    '16x20': { width: 4800, height: 6000 },
-    '18x24': { width: 5400, height: 7200 }
-};
+// API configuration
+const API_BASE = 'http://localhost:3000/api';
+
+// Frame size configurations (will be loaded from API)
+let FRAME_SIZES = {};
+
+// Mount options (will be loaded from API)
+let MOUNT_OPTIONS = {};
+
+// Session management
+let sessionId = localStorage.getItem('photoFramerSession');
+let isAdmin = false;
 
 // Minimum DPI threshold for print quality
 const MIN_DPI = 150;
@@ -29,7 +31,8 @@ let state = {
     isDragging: false,
     dragStart: { x: 0, y: 0 },
     frameSize: '8x10',
-    orientation: 'portrait'
+    orientation: 'portrait',
+    selectedMount: 'no-mount'
 };
 
 // DOM elements
@@ -41,11 +44,14 @@ const ctx = photoCanvas.getContext('2d');
 const cropOverlay = document.getElementById('cropOverlay');
 const cropCtx = cropOverlay.getContext('2d');
 const frameSizeSelect = document.getElementById('frameSize');
+const mountSelect = document.getElementById('mountSelect');
 const zoomSlider = document.getElementById('zoomSlider');
 const zoomValue = document.getElementById('zoomValue');
 const resetPositionBtn = document.getElementById('resetPosition');
+const addToCartBtn = document.getElementById('addToCartBtn');
 const downloadBtn = document.getElementById('downloadBtn');
 const uploadNewBtn = document.getElementById('uploadNewBtn');
+const cartBadge = document.getElementById('cartBadge');
 const frame = document.getElementById('frame');
 const canvasContainer = document.getElementById('canvasContainer');
 const uploadLabel = document.querySelector('.upload-label');
@@ -56,8 +62,210 @@ const resolutionWarning = document.getElementById('resolutionWarning');
 const warningMessage = document.getElementById('warningMessage');
 const closeWarningBtn = document.getElementById('closeWarning');
 
+// Load frames from API
+async function loadFrames() {
+    try {
+        const response = await fetch(`${API_BASE}/frames`);
+        const data = await response.json();
+        
+        if (data.success && data.frames.length > 0) {
+            // Build FRAME_SIZES object from API data
+            FRAME_SIZES = {};
+            data.frames.forEach(frame => {
+                FRAME_SIZES[frame.id] = {
+                    width: frame.width,
+                    height: frame.height,
+                    price: frame.price
+                };
+            });
+            
+            // Populate frame size dropdown
+            populateFrameDropdown(data.frames);
+            
+            // Set default frame size if current one doesn't exist
+            if (!FRAME_SIZES[state.frameSize] && data.frames.length > 0) {
+                state.frameSize = data.frames[0].id;
+            }
+            
+            // Update price display
+            updatePriceDisplay();
+        } else {
+            console.error('No frames available from API');
+        }
+    } catch (error) {
+        console.error('Error loading frames:', error);
+        // Fallback to hardcoded frames if API fails
+        useFallbackFrames();
+    }
+}
+
+// Fallback frames if API is unavailable
+function useFallbackFrames() {
+    FRAME_SIZES = {
+        '4x6': { width: 1200, height: 1800, price: 15.99 },
+        '5x7': { width: 1500, height: 2100, price: 22.99 },
+        '8x10': { width: 2400, height: 3000, price: 29.99 },
+        '11x14': { width: 3300, height: 4200, price: 39.99 },
+        '16x20': { width: 4800, height: 6000, price: 54.99 },
+        '18x24': { width: 5400, height: 7200, price: 69.99 }
+    };
+    
+    populateFrameDropdown(
+        Object.entries(FRAME_SIZES).map(([id, data]) => ({
+            id,
+            size: id,
+            width: data.width,
+            height: data.height,
+            price: data.price,
+            available: true
+        }))
+    );
+    
+    updatePriceDisplay();
+}
+
+// Populate frame size dropdown
+function populateFrameDropdown(frames) {
+    frameSizeSelect.innerHTML = frames.map(frame => 
+        `<option value="${frame.id}">${frame.size}" - $${frame.price.toFixed(2)}</option>`
+    ).join('');
+    
+    // Set selected value
+    if (frames.find(f => f.id === state.frameSize)) {
+        frameSizeSelect.value = state.frameSize;
+    }
+}
+
+// Update price display
+function updatePriceDisplay() {
+    const framePriceDisplay = document.getElementById('framePriceDisplay');
+    const mountPriceDisplay = document.getElementById('mountPriceDisplay');
+    const totalPriceDisplay = document.getElementById('totalPriceDisplay');
+    
+    if (FRAME_SIZES[state.frameSize] && MOUNT_OPTIONS[state.selectedMount]) {
+        const framePrice = FRAME_SIZES[state.frameSize].price;
+        const mountPrice = MOUNT_OPTIONS[state.selectedMount].price;
+        const totalPrice = framePrice + mountPrice;
+        
+        if (framePriceDisplay) framePriceDisplay.textContent = `$${framePrice.toFixed(2)}`;
+        if (mountPriceDisplay) mountPriceDisplay.textContent = `$${mountPrice.toFixed(2)}`;
+        if (totalPriceDisplay) totalPriceDisplay.textContent = `$${totalPrice.toFixed(2)}`;
+    }
+}
+
+// Check user session and permissions
+async function checkUserSession() {
+    try {
+        const headers = {};
+        if (sessionId) {
+            headers['x-session-id'] = sessionId;
+        }
+        
+        const response = await fetch(`${API_BASE}/auth/session`, { headers });
+        const data = await response.json();
+        
+        if (data.success) {
+            isAdmin = data.isAdmin || false;
+            updateDownloadButtonState();
+        }
+    } catch (error) {
+        console.error('Error checking session:', error);
+        isAdmin = false;
+        updateDownloadButtonState();
+    }
+}
+
+// Update download button based on user permissions
+function updateDownloadButtonState() {
+    if (!isAdmin) {
+        downloadBtn.title = 'Only administrators can download high-resolution images';
+        downloadBtn.style.opacity = '0.6';
+        downloadBtn.style.cursor = 'not-allowed';
+    } else {
+        downloadBtn.title = 'Download high-resolution image';
+        downloadBtn.style.opacity = '1';
+        downloadBtn.style.cursor = 'pointer';
+    }
+}
+
+// Load mounts from API
+async function loadMounts() {
+    try {
+        const response = await fetch(`${API_BASE}/mounts`);
+        const data = await response.json();
+        
+        if (data.success && data.mounts.length > 0) {
+            // Build MOUNT_OPTIONS object from API data
+            MOUNT_OPTIONS = {};
+            data.mounts.forEach(mount => {
+                MOUNT_OPTIONS[mount.id] = {
+                    name: mount.name,
+                    description: mount.description,
+                    price: mount.price
+                };
+            });
+            
+            // Populate mount dropdown
+            populateMountDropdown(data.mounts);
+            
+            // Set default mount if current one doesn't exist
+            if (!MOUNT_OPTIONS[state.selectedMount] && data.mounts.length > 0) {
+                state.selectedMount = data.mounts[0].id;
+            }
+            
+            // Update price display
+            updatePriceDisplay();
+        } else {
+            console.error('No mounts available from API');
+        }
+    } catch (error) {
+        console.error('Error loading mounts:', error);
+        // Fallback to default mount
+        useFallbackMounts();
+    }
+}
+
+// Fallback mounts if API is unavailable
+function useFallbackMounts() {
+    MOUNT_OPTIONS = {
+        'no-mount': { name: 'No Mount', description: 'Standard frame without mount', price: 0.00 }
+    };
+    
+    populateMountDropdown([
+        { id: 'no-mount', name: 'No Mount', description: 'Standard frame without mount', price: 0.00, available: true }
+    ]);
+    
+    updatePriceDisplay();
+}
+
+// Populate mount dropdown
+function populateMountDropdown(mounts) {
+    mountSelect.innerHTML = mounts.map(mount => {
+        const priceText = mount.price > 0 ? ` (+$${mount.price.toFixed(2)})` : '';
+        return `<option value="${mount.id}">${mount.name}${priceText}</option>`;
+    }).join('');
+    
+    // Set selected value
+    if (mounts.find(m => m.id === state.selectedMount)) {
+        mountSelect.value = state.selectedMount;
+    }
+}
+
+// Handle mount selection change
+function handleMountChange(e) {
+    state.selectedMount = e.target.value;
+    updatePriceDisplay();
+}
+
 // Initialize event listeners
 function init() {
+    // Check user session
+    checkUserSession();
+    
+    // Load frames and mounts from API
+    loadFrames();
+    loadMounts();
+    
     // File upload
     photoUpload.addEventListener('change', handleFileSelect);
     
@@ -68,10 +276,22 @@ function init() {
     
     // Controls
     frameSizeSelect.addEventListener('change', handleFrameSizeChange);
+    mountSelect.addEventListener('change', handleMountChange);
     zoomSlider.addEventListener('input', handleZoomChange);
     resetPositionBtn.addEventListener('click', resetPosition);
+    
+    // Add to cart button - make sure it exists before adding listener
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', addToCart);
+    } else {
+        console.error('Add to Cart button not found');
+    }
+    
     downloadBtn.addEventListener('click', downloadFramedImage);
     uploadNewBtn.addEventListener('click', uploadNew);
+    
+    // Update cart badge on load
+    updateCartBadge();
     
     // Orientation controls
     portraitBtn.addEventListener('click', () => handleOrientationChange('portrait'));
@@ -312,6 +532,9 @@ function handleFrameSizeChange(e) {
     state.frameSize = e.target.value;
     updateCanvas();
     
+    // Update price display
+    updatePriceDisplay();
+    
     // Check resolution when frame size changes
     checkResolution();
 }
@@ -542,8 +765,44 @@ function handleTouchMove(e) {
 }
 
 // Download functionality
-function downloadFramedImage() {
+async function downloadFramedImage() {
     if (!state.uploadedImage) return;
+    
+    // Check if user has permission to download
+    if (!isAdmin) {
+        const shouldLogin = confirm('Only administrators can download high-resolution images.\n\nWould you like to login as admin?');
+        if (shouldLogin) {
+            showLoginPrompt();
+        }
+        return;
+    }
+    
+    // Verify with backend
+    try {
+        const headers = {};
+        if (sessionId) {
+            headers['x-session-id'] = sessionId;
+        }
+        
+        const response = await fetch(`${API_BASE}/download/verify`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...headers
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success || !data.canDownload) {
+            alert(data.message || 'You do not have permission to download high-resolution images.');
+            return;
+        }
+    } catch (error) {
+        console.error('Error verifying download permission:', error);
+        alert('Error verifying download permission. Please try again.');
+        return;
+    }
     
     // Create a temporary canvas for the final output
     const outputCanvas = document.createElement('canvas');
@@ -635,6 +894,134 @@ function downloadFramedImage() {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
     }, 'image/png');
+}
+
+// Login prompt for admin access
+function showLoginPrompt() {
+    const username = prompt('Enter admin username:');
+    if (!username) return;
+    
+    const password = prompt('Enter admin password:');
+    if (!password) return;
+    
+    loginAsAdmin(username, password);
+}
+
+// Login as admin
+async function loginAsAdmin(username, password) {
+    try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.sessionId) {
+            sessionId = data.sessionId;
+            isAdmin = data.isAdmin;
+            localStorage.setItem('photoFramerSession', sessionId);
+            updateDownloadButtonState();
+            alert('Successfully logged in as admin!');
+        } else {
+            alert('Login failed: ' + (data.error || 'Invalid credentials'));
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('Login failed. Please try again.');
+    }
+}
+
+// Cart Management Functions
+function getCart() {
+    const cart = localStorage.getItem('photoFramerCart');
+    return cart ? JSON.parse(cart) : [];
+}
+
+function saveCart(cart) {
+    localStorage.setItem('photoFramerCart', JSON.stringify(cart));
+    updateCartBadge();
+}
+
+function updateCartBadge() {
+    const cart = getCart();
+    if (cartBadge) {
+        cartBadge.textContent = cart.length;
+        cartBadge.style.display = cart.length > 0 ? 'flex' : 'none';
+    }
+}
+
+function addToCart(e) {
+    console.log('Add to cart clicked'); // Debug log
+    
+    if (!state.uploadedImage) {
+        alert('Please upload an image first');
+        return;
+    }
+    
+    // Generate preview image as data URL
+    const previewCanvas = document.createElement('canvas');
+    const previewCtx = previewCanvas.getContext('2d');
+    previewCanvas.width = 200;
+    previewCanvas.height = 200;
+    
+    // Draw scaled preview
+    const dimensions = getFrameDimensions(state.frameSize, state.orientation);
+    const aspect = dimensions.width / dimensions.height;
+    
+    let previewWidth, previewHeight;
+    if (aspect > 1) {
+        previewWidth = 200;
+        previewHeight = 200 / aspect;
+    } else {
+        previewHeight = 200;
+        previewWidth = 200 * aspect;
+    }
+    
+    const offsetX = (200 - previewWidth) / 2;
+    const offsetY = (200 - previewHeight) / 2;
+    
+    previewCtx.fillStyle = 'white';
+    previewCtx.fillRect(0, 0, 200, 200);
+    previewCtx.drawImage(state.uploadedImage, offsetX, offsetY, previewWidth, previewHeight);
+    
+    const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.7);
+    
+    // Create cart item
+    const cartItem = {
+        id: Date.now(),
+        frameSize: state.frameSize,
+        frameSizeName: FRAME_SIZES[state.frameSize] ? state.frameSize : '8x10',
+        framePrice: FRAME_SIZES[state.frameSize] ? FRAME_SIZES[state.frameSize].price : 0,
+        mountId: state.selectedMount,
+        mountName: MOUNT_OPTIONS[state.selectedMount] ? MOUNT_OPTIONS[state.selectedMount].name : 'No Mount',
+        mountPrice: MOUNT_OPTIONS[state.selectedMount] ? MOUNT_OPTIONS[state.selectedMount].price : 0,
+        orientation: state.orientation,
+        zoom: state.currentZoom,
+        position: { ...state.imagePosition },
+        imageData: state.uploadedImage.src,
+        previewImage: previewDataUrl,
+        totalPrice: (FRAME_SIZES[state.frameSize] ? FRAME_SIZES[state.frameSize].price : 0) + 
+                   (MOUNT_OPTIONS[state.selectedMount] ? MOUNT_OPTIONS[state.selectedMount].price : 0),
+        addedAt: new Date().toISOString()
+    };
+    
+    // Add to cart
+    const cart = getCart();
+    cart.push(cartItem);
+    saveCart(cart);
+    
+    // Show success message
+    alert('Item added to cart!\n\nYou can continue adding more items or view your cart.');
+    
+    // Option to view cart or continue
+    const viewCart = confirm('Would you like to view your cart now?');
+    if (viewCart) {
+        window.location.href = 'cart.html';
+    }
 }
 
 // Initialize the app

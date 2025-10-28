@@ -46,13 +46,26 @@
                     <div class="control-group">
                         <label for="frameSize">Frame Size:</label>
                         <select id="frameSize">
-                            <option value="4x6">4x6 inches</option>
-                            <option value="5x7">5x7 inches</option>
-                            <option value="8x10" selected>8x10 inches</option>
-                            <option value="11x14">11x14 inches</option>
-                            <option value="16x20">16x20 inches</option>
-                            <option value="18x24">18x24 inches</option>
+                            <!-- Options will be populated from API -->
                         </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="mountSelect">Mount Option:</label>
+                        <select id="mountSelect">
+                            <!-- Options will be populated from API -->
+                        </select>
+                    </div>
+
+                    <div class="control-group price-display-group">
+                        <label>Total Price:</label>
+                        <div class="price-display">
+                            <span class="price-breakdown">
+                                Frame: <span id="framePriceDisplay">$0.00</span><br>
+                                Mount: <span id="mountPriceDisplay">$0.00</span>
+                            </span>
+                            <span class="total-price" id="totalPriceDisplay">$0.00</span>
+                        </div>
                     </div>
 
                     <div class="control-group">
@@ -88,8 +101,21 @@
                     </div>
 
                     <div class="action-buttons">
-                        <button id="downloadBtn" class="btn-primary">Download Framed Photo</button>
+                        <button id="addToCartBtn" class="btn-primary">Add to Cart</button>
+                        <button id="downloadBtn" class="btn-secondary">Download Preview (Admin Only)</button>
                         <button id="uploadNewBtn" class="btn-secondary">Upload New Photo</button>
+                    </div>
+                    
+                    <!-- Cart Icon -->
+                    <div class="cart-icon-container">
+                        <a href="cart.html" class="cart-icon-link">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span class="cart-badge" id="cartBadge">0</span>
+                        </a>
                     </div>
                 </div>
 
