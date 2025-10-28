@@ -45,6 +45,12 @@ function displayOrderSummary(checkoutData) {
     totalEl.textContent = `$${totals.total.toFixed(2)}`;
 }
 
+// Get full cart data (with imageData)
+function getFullCart() {
+    const cart = localStorage.getItem('photoFramerCart');
+    return cart ? JSON.parse(cart) : [];
+}
+
 // Handle form submission
 async function handleCheckout(e) {
     e.preventDefault();
@@ -55,8 +61,25 @@ async function handleCheckout(e) {
         return;
     }
     
+    // Disable submit button to prevent double submission
+    const submitButton = e.target.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Processing Order...';
+    
+    // Get full cart items with imageData (not in checkoutData to avoid localStorage quota)
+    const fullCart = getFullCart();
+    
+    // Merge checkout items with full cart items to get imageData
+    const fullOrderItems = checkoutData.items.map(checkoutItem => {
+        const cartItem = fullCart.find(item => item.id === checkoutItem.id);
+        return {
+            ...checkoutItem,
+            imageData: cartItem ? cartItem.imageData : null  // Add full image data
+        };
+    });
+    
     // Collect form data
-    const formData = {
+    const orderData = {
         contact: {
             email: document.getElementById('email').value
         },
@@ -73,21 +96,51 @@ async function handleCheckout(e) {
             method: document.querySelector('input[name="paymentMethod"]:checked').value
         },
         order: {
-            items: checkoutData.items,
+            items: fullOrderItems,  // Use items with full imageData
             totals: checkoutData.totals,
             orderDate: new Date().toISOString()
         }
     };
     
-    // Store order for success page
-    localStorage.setItem('photoFramerLastOrder', JSON.stringify(formData));
-    
-    // Clear cart and checkout data
-    localStorage.removeItem('photoFramerCart');
-    localStorage.removeItem('photoFramerCheckout');
-    
-    // Redirect to success page
-    window.location.href = 'order-success.html';
+    try {
+        // Submit order to backend
+        const response = await fetch('http://localhost:3000/api/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(orderData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Store order for success page
+            const orderWithId = {
+                ...orderData,
+                orderId: result.orderId,
+                customerEmailSent: result.customerEmailSent,
+                adminEmailSent: result.adminEmailSent
+            };
+            localStorage.setItem('photoFramerLastOrder', JSON.stringify(orderWithId));
+            
+            // Clear cart and checkout data
+            localStorage.removeItem('photoFramerCart');
+            localStorage.removeItem('photoFramerCheckout');
+            
+            // Redirect to success page
+            window.location.href = 'order-success.html';
+        } else {
+            throw new Error(result.error || 'Failed to process order');
+        }
+    } catch (error) {
+        console.error('Error submitting order:', error);
+        alert('Error processing your order. Please try again.\n\n' + error.message);
+        
+        // Re-enable submit button
+        submitButton.disabled = false;
+        submitButton.textContent = 'Place Order';
+    }
 }
 
 // Initialize

@@ -129,6 +129,7 @@ function loadCart() {
 
 // Handle checkout
 function handleCheckout() {
+    console.log('Checkout button clicked!');
     const cart = getCart();
     
     if (cart.length === 0) {
@@ -136,22 +137,66 @@ function handleCheckout() {
         return;
     }
     
-    // Save order summary to localStorage for checkout page
+    // Calculate totals
     const totals = calculateTotals(cart);
-    localStorage.setItem('photoFramerCheckout', JSON.stringify({
-        items: cart,
-        totals,
-        timestamp: new Date().toISOString()
+    
+    // Create checkout data WITHOUT the large imageData field
+    // (we'll include it when submitting to backend, not in localStorage)
+    const checkoutItems = cart.map(item => ({
+        id: item.id,
+        frameSize: item.frameSize,
+        frameSizeName: item.frameSizeName,
+        framePrice: item.framePrice,
+        mountId: item.mountId,
+        mountName: item.mountName,
+        mountPrice: item.mountPrice,
+        orientation: item.orientation,
+        zoom: item.zoom,
+        position: item.position,
+        previewImage: item.previewImage,  // Keep preview (smaller)
+        totalPrice: item.totalPrice,
+        addedAt: item.addedAt
+        // NOTE: imageData is NOT included here to avoid localStorage quota
+        // It will be retrieved from original cart when submitting order
     }));
     
-    // Navigate to checkout
-    window.location.href = 'checkout.html';
+    try {
+        // Save lightweight checkout data to localStorage
+        localStorage.setItem('photoFramerCheckout', JSON.stringify({
+            items: checkoutItems,
+            totals,
+            timestamp: new Date().toISOString()
+        }));
+        
+        console.log('Checkout data saved, navigating to checkout page');
+        
+        // Navigate to checkout
+        window.location.href = 'checkout.html';
+    } catch (error) {
+        console.error('Error saving checkout data:', error);
+        if (error.name === 'QuotaExceededError') {
+            alert('Cart data is too large. This usually happens with high-resolution images.\n\nPlease try:\n1. Reducing the number of items\n2. Using smaller images\n\nWe\'ll fix this issue in the next update to handle larger images better.');
+        } else {
+            alert('Error preparing checkout. Please try again.');
+        }
+    }
 }
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Cart page loaded');
+    console.log('Checkout button:', checkoutBtn);
+    
     loadCart();
     
     // Attach event listeners
-    checkoutBtn.addEventListener('click', handleCheckout);
+    if (checkoutBtn) {
+        console.log('Attaching click listener to checkout button');
+        checkoutBtn.addEventListener('click', handleCheckout);
+        
+        // Also add onclick as backup
+        checkoutBtn.onclick = handleCheckout;
+    } else {
+        console.error('Checkout button not found!');
+    }
 });

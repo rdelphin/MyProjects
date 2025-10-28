@@ -49,7 +49,6 @@ const zoomSlider = document.getElementById('zoomSlider');
 const zoomValue = document.getElementById('zoomValue');
 const resetPositionBtn = document.getElementById('resetPosition');
 const addToCartBtn = document.getElementById('addToCartBtn');
-const downloadBtn = document.getElementById('downloadBtn');
 const uploadNewBtn = document.getElementById('uploadNewBtn');
 const cartBadge = document.getElementById('cartBadge');
 const frame = document.getElementById('frame');
@@ -287,7 +286,6 @@ function init() {
         console.error('Add to Cart button not found');
     }
     
-    downloadBtn.addEventListener('click', downloadFramedImage);
     uploadNewBtn.addEventListener('click', uploadNew);
     
     // Update cart badge on load
@@ -1014,15 +1012,15 @@ function addToCart(e) {
     cart.push(cartItem);
     saveCart(cart);
     
-    // Show success message
-    alert('Item added to cart!\n\nYou can continue adding more items or view your cart.');
+    // Show success message with simpler flow
+    const message = `✅ Item added to cart!\n\nCart now has ${cart.length} item(s).\n\nYou can:\n- Upload a new photo to add more items\n- Click the cart icon to view your cart`;
+    alert(message);
     
-    // Option to view cart or continue
-    const viewCart = confirm('Would you like to view your cart now?');
-    if (viewCart) {
-        window.location.href = 'cart.html';
-    }
+    // No automatic redirect - let user continue shopping
 }
+
+// Make addToCart globally accessible for onclick handler
+window.handleAddToCart = addToCart;
 
 // Initialize the app
 init();

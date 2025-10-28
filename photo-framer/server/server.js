@@ -4,11 +4,14 @@ const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
+const emailService = require('./emailService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'data', 'frames.json');
 const MOUNTS_FILE = path.join(__dirname, 'data', 'mounts.json');
+const ORDERS_FILE = path.join(__dirname, 'data', 'orders.json');
+const DOWNLOADS_FILE = path.join(__dirname, 'data', 'downloads.json');
 
 // Simple in-memory session store (in production, use Redis or database)
 const sessions = new Map();
@@ -500,10 +503,159 @@ app.patch('/api/admin/frames/:id/availability', requireAdmin, async (req, res) =
     }
 });
 
+// ORDER ROUTES
+
+// Helper functions for orders
+async function readOrdersData() {
+    try {
+        const data = await fs.readFile(ORDERS_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        return { orders: [] };
+    }
+}
+
+async function writeOrdersData(data) {
+    try {
+        await fs.writeFile(ORDERS_FILE, JSON.stringify(data, null, 2), 'utf8');
+        return true;
+    } catch (error) {
+        console.error('Error writing orders data:', error);
+        return false;
+    }
+}
+
+async function readDownloadsData() {
+    try {
+        const data = await fs.readFile(DOWNLOADS_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        return { downloads: [] };
+    }
+}
+
+async function writeDownloadsData(data) {
+    try {
+        await fs.writeFile(DOWNLOADS_FILE, JSON.stringify(data, null, 2), 'utf8');
+        return true;
+    } catch (error) {
+        console.error('Error writing downloads data:', error);
+        return false;
+    }
+}
+
+// Create new order
+app.post('/api/orders', async (req, res) => {
+    try {
+        const orderData = req.body;
+        
+        // Generate order ID
+        const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+        
+        // Read existing orders
+        const ordersFile = await readOrdersData();
+        
+        // Create order record
+        const order = {
+            orderId,
+            ...orderData,
+            status: 'pending',
+            createdAt: new Date().toISOString()
+        };
+        
+        // Save order
+        ordersFile.orders.push(order);
+        await writeOrdersData(ordersFile);
+        
+        // Send customer confirmation email
+        const customerEmail = await emailService.sendCustomerConfirmation(orderData);
+        
+        // Send admin notification with download link
+        const adminEmail = await emailService.sendAdminNotification(orderData, orderId);
+        
+        // Store download token if admin email succeeded
+        if (adminEmail.success && adminEmail.downloadToken) {
+            const downloadsFile = await readDownloadsData();
+            downloadsFile.downloads.push({
+                orderId,
+                token: adminEmail.downloadToken,
+                expiresAt: adminEmail.expiresAt,
+                downloaded: false,
+                createdAt: new Date().toISOString()
+            });
+            await writeDownloadsData(downloadsFile);
+        }
+        
+        res.json({
+            success: true,
+            orderId,
+            customerEmailSent: customerEmail.success,
+            adminEmailSent: adminEmail.success
+        });
+        
+    } catch (error) {
+        console.error('Error creating order:', error);
+        res.status(500).json({ success: false, error: 'Failed to create order' });
+    }
+});
+
+// Download endpoint with token
+app.get('/api/download/:orderId/:token', async (req, res) => {
+    try {
+        const { orderId, token } = req.params;
+        
+        // Read downloads data
+        const downloadsFile = await readDownloadsData();
+        const download = downloadsFile.downloads.find(d => d.orderId === orderId && d.token === token);
+        
+        if (!download) {
+            return res.status(404).json({ success: false, error: 'Invalid download link' });
+        }
+        
+        // Check if expired
+        if (new Date(download.expiresAt) < new Date()) {
+            return res.status(403).json({ success: false, error: 'Download link has expired' });
+        }
+        
+        // Check if already downloaded
+        if (download.downloaded) {
+            return res.status(403).json({ success: false, error: 'This link has already been used' });
+        }
+        
+        // Get order data
+        const ordersFile = await readOrdersData();
+        const order = ordersFile.orders.find(o => o.orderId === orderId);
+        
+        if (!order) {
+            return res.status(404).json({ success: false, error: 'Order not found' });
+        }
+        
+        // Mark as downloaded
+        download.downloaded = true;
+        download.downloadedAt = new Date().toISOString();
+        await writeDownloadsData(downloadsFile);
+        
+        // Return order data with images
+        res.json({
+            success: true,
+            orderId,
+            items: order.order.items,
+            message: 'Download successful. Use this data to generate print-ready images.'
+        });
+        
+    } catch (error) {
+        console.error('Error processing download:', error);
+        res.status(500).json({ success: false, error: 'Failed to process download' });
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Photo Framer API server running on port ${PORT}`);
     console.log(`Frontend: http://localhost:${PORT}/`);
     console.log(`Admin Panel: http://localhost:${PORT}/admin.html`);
     console.log(`API: http://localhost:${PORT}/api/frames`);
+    console.log(`\n📧 Email Configuration:`);
+    console.log(`Set EMAIL_USER and EMAIL_PASS environment variables to enable email notifications`);
+    console.log(`Set ADMIN_EMAIL environment variable to receive order notifications`);
 });
