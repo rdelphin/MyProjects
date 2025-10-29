@@ -25,7 +25,9 @@ app.use(cors({
     origin: true,
     credentials: true
 }));
-app.use(bodyParser.json());
+// Increase body size limit to handle large image data (50MB)
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static(path.join(__dirname, '..')));
 
 // Session middleware
@@ -596,6 +598,42 @@ app.post('/api/orders', async (req, res) => {
     } catch (error) {
         console.error('Error creating order:', error);
         res.status(500).json({ success: false, error: 'Failed to create order' });
+    }
+});
+
+// Get all orders (admin only)
+app.get('/api/admin/orders', requireAdmin, async (req, res) => {
+    try {
+        const ordersFile = await readOrdersData();
+        res.json({ success: true, orders: ordersFile.orders });
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ success: false, error: 'Failed to fetch orders' });
+    }
+});
+
+// Update order status (admin only)
+app.patch('/api/admin/orders/:orderId/status', requireAdmin, async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const { status } = req.body;
+        
+        const ordersFile = await readOrdersData();
+        const orderIndex = ordersFile.orders.findIndex(o => o.orderId === orderId);
+        
+        if (orderIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Order not found' });
+        }
+        
+        ordersFile.orders[orderIndex].status = status;
+        ordersFile.orders[orderIndex].updatedAt = new Date().toISOString();
+        
+        await writeOrdersData(ordersFile);
+        
+        res.json({ success: true, order: ordersFile.orders[orderIndex] });
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        res.status(500).json({ success: false, error: 'Failed to update order status' });
     }
 });
 

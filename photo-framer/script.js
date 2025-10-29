@@ -955,8 +955,8 @@ function updateCartBadge() {
 function addToCart(e) {
     console.log('Add to cart clicked'); // Debug log
     
+    // Silently ignore if no image uploaded
     if (!state.uploadedImage) {
-        alert('Please upload an image first');
         return;
     }
     
@@ -1012,11 +1012,35 @@ function addToCart(e) {
     cart.push(cartItem);
     saveCart(cart);
     
-    // Show success message with simpler flow
-    const message = `✅ Item added to cart!\n\nCart now has ${cart.length} item(s).\n\nYou can:\n- Upload a new photo to add more items\n- Click the cart icon to view your cart`;
-    alert(message);
+    // Show toast notification
+    showToast('✅ Item added to cart!');
     
-    // No automatic redirect - let user continue shopping
+    // Stay on current page - user can manually click "Upload New Photo" if they want to add another item
+    // Or click cart icon to view their cart
+    // Cart badge will update automatically to show item was added
+}
+
+// Toast notification function
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    if (toast && toastMessage) {
+        toastMessage.textContent = message;
+        toast.classList.add('show');
+        toast.classList.remove('hide');
+        
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            toast.classList.add('hide');
+            toast.classList.remove('show');
+            
+            // Remove hide class after animation completes
+            setTimeout(() => {
+                toast.classList.remove('hide');
+            }, 300);
+        }, 3000);
+    }
 }
 
 // Make addToCart globally accessible for onclick handler

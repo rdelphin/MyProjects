@@ -7,18 +7,17 @@
     <link rel="stylesheet" href="admin-style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Photo Framer Admin Panel</h1>
-            <p>Manage mount options</p>
-        </header>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🖼️ Mount Management</h1>
+            <div class="admin-nav">
+                <a href="admin.html">Frame Management</a>
+                <a href="admin-mounts.html" class="active">Mount Management</a>
+                <a href="admin-orders.html">Orders</a>
+            </div>
+        </div>
 
-        <nav class="admin-nav">
-            <a href="admin.html" class="nav-link">Frame Management</a>
-            <a href="admin-mounts.html" class="nav-link active">Mount Management</a>
-        </nav>
-
-        <div class="main-content">
+        <div class="admin-content">
             <!-- Add New Mount Section -->
             <div class="add-frame-section">
                 <h2>Add New Mount Option</h2>
@@ -52,8 +51,6 @@
                     <p class="loading">Loading mounts...</p>
                 </div>
             </div>
-        </div>
-
         <!-- Edit Modal -->
         <div class="modal" id="editModal">
             <div class="modal-content">
@@ -85,6 +82,7 @@
 
         <!-- Message Toast -->
         <div class="toast" id="toast"></div>
+        </div>
     </div>
 
     <script src="admin-mounts-script.js"></script>

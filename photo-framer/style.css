@@ -503,3 +503,52 @@ input[type="range"]::-moz-range-thumb {
         flex-direction: column;
     }
 }
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #28a745;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    display: none;
+    align-items: center;
+    gap: 10px;
+    z-index: 10000;
+    animation: slideInToast 0.3s ease;
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.toast.show {
+    display: flex;
+}
+
+@keyframes slideInToast {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutToast {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+.toast.hide {
+    animation: slideOutToast 0.3s ease;
+}
