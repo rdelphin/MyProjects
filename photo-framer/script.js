@@ -44,7 +44,6 @@ const ctx = photoCanvas.getContext('2d');
 const cropOverlay = document.getElementById('cropOverlay');
 const cropCtx = cropOverlay.getContext('2d');
 const frameSizeSelect = document.getElementById('frameSize');
-const mountSelect = document.getElementById('mountSelect');
 const zoomSlider = document.getElementById('zoomSlider');
 const zoomValue = document.getElementById('zoomValue');
 const resetPositionBtn = document.getElementById('resetPosition');
@@ -176,15 +175,8 @@ async function checkUserSession() {
 
 // Update download button based on user permissions
 function updateDownloadButtonState() {
-    if (!isAdmin) {
-        downloadBtn.title = 'Only administrators can download high-resolution images';
-        downloadBtn.style.opacity = '0.6';
-        downloadBtn.style.cursor = 'not-allowed';
-    } else {
-        downloadBtn.title = 'Download high-resolution image';
-        downloadBtn.style.opacity = '1';
-        downloadBtn.style.cursor = 'pointer';
-    }
+    // Download button is not present on this page, skip
+    return;
 }
 
 // Load mounts from API
@@ -204,8 +196,8 @@ async function loadMounts() {
                 };
             });
             
-            // Populate mount dropdown
-            populateMountDropdown(data.mounts);
+            // Populate mount grid
+            populateMountGrid(data.mounts);
             
             // Set default mount if current one doesn't exist
             if (!MOUNT_OPTIONS[state.selectedMount] && data.mounts.length > 0) {
@@ -230,29 +222,69 @@ function useFallbackMounts() {
         'no-mount': { name: 'No Mount', description: 'Standard frame without mount', price: 0.00 }
     };
     
-    populateMountDropdown([
+    populateMountGrid([
         { id: 'no-mount', name: 'No Mount', description: 'Standard frame without mount', price: 0.00, available: true }
     ]);
     
     updatePriceDisplay();
 }
 
-// Populate mount dropdown
-function populateMountDropdown(mounts) {
-    mountSelect.innerHTML = mounts.map(mount => {
-        const priceText = mount.price > 0 ? ` (+$${mount.price.toFixed(2)})` : '';
-        return `<option value="${mount.id}">${mount.name}${priceText}</option>`;
+// Populate mount grid
+function populateMountGrid(mounts) {
+    const mountGrid = document.getElementById('mountGrid');
+    
+    mountGrid.innerHTML = mounts.map(mount => {
+        const priceText = mount.price > 0 ? `+$${mount.price.toFixed(2)}` : 'Free';
+        const priceClass = mount.price > 0 ? '' : 'free';
+        const isSelected = mount.id === state.selectedMount;
+        
+        // Determine icon based on mount type (fallback if no thumbnail)
+        let icon = '🖼️';
+        if (mount.id.includes('aluminium')) icon = '⚙️';
+        else if (mount.id.includes('wood')) icon = '🌲';
+        else if (mount.id.includes('acrylic')) icon = '💎';
+        else if (mount.id === 'no-mount') icon = '⊗';
+        
+        // Use actual thumbnail if available, otherwise use CSS background with icon
+        let thumbnailContent;
+        if (mount.thumbnail) {
+            thumbnailContent = `<img src="${mount.thumbnail}" alt="${mount.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`;
+        } else {
+            thumbnailContent = `<span class="mount-thumbnail-icon">${icon}</span>`;
+        }
+        
+        return `
+            <div class="mount-option ${isSelected ? 'selected' : ''}" data-mount-id="${mount.id}">
+                <div class="mount-thumbnail ${mount.thumbnail ? '' : mount.id}">
+                    ${thumbnailContent}
+                </div>
+                <div class="mount-name">${mount.name}</div>
+                <div class="mount-price ${priceClass}">${priceText}</div>
+            </div>
+        `;
     }).join('');
     
-    // Set selected value
-    if (mounts.find(m => m.id === state.selectedMount)) {
-        mountSelect.value = state.selectedMount;
-    }
+    // Add click event listeners to all mount options
+    mountGrid.querySelectorAll('.mount-option').forEach(option => {
+        option.addEventListener('click', handleMountSelection);
+    });
 }
 
-// Handle mount selection change
-function handleMountChange(e) {
-    state.selectedMount = e.target.value;
+// Handle mount selection
+function handleMountSelection(e) {
+    const mountOption = e.currentTarget;
+    const mountId = mountOption.dataset.mountId;
+    
+    // Update state
+    state.selectedMount = mountId;
+    
+    // Update UI - remove selected class from all and add to clicked
+    document.querySelectorAll('.mount-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    mountOption.classList.add('selected');
+    
+    // Update price display
     updatePriceDisplay();
 }
 
@@ -275,7 +307,6 @@ function init() {
     
     // Controls
     frameSizeSelect.addEventListener('change', handleFrameSizeChange);
-    mountSelect.addEventListener('change', handleMountChange);
     zoomSlider.addEventListener('input', handleZoomChange);
     resetPositionBtn.addEventListener('click', resetPosition);
     

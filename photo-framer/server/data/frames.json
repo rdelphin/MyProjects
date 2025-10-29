@@ -33,6 +33,14 @@
       "available": true
     },
     {
+      "id": "20x30",
+      "size": "20x30",
+      "width": 3600,
+      "height": 4800,
+      "price": 110,
+      "available": true
+    },
+    {
       "id": "16x20",
       "size": "16x20",
       "width": 4800,

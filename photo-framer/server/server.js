@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const path = require('path');
 const crypto = require('crypto');
+const multer = require('multer');
 const emailService = require('./emailService');
 
 const app = express();
@@ -12,6 +13,41 @@ const DATA_FILE = path.join(__dirname, 'data', 'frames.json');
 const MOUNTS_FILE = path.join(__dirname, 'data', 'mounts.json');
 const ORDERS_FILE = path.join(__dirname, 'data', 'orders.json');
 const DOWNLOADS_FILE = path.join(__dirname, 'data', 'downloads.json');
+const UPLOADS_DIR = path.join(__dirname, '..', 'uploads', 'mounts');
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        try {
+            // Create uploads directory if it doesn't exist
+            await fs.mkdir(UPLOADS_DIR, { recursive: true });
+            cb(null, UPLOADS_DIR);
+        } catch (error) {
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        // Generate unique filename
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, 'mount-' + uniqueSuffix + ext);
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB max file size
+    },
+    fileFilter: function (req, file, cb) {
+        // Accept only images
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'));
+        }
+    }
+});
 
 // Simple in-memory session store (in production, use Redis or database)
 const sessions = new Map();
@@ -355,16 +391,24 @@ app.get('/api/admin/mounts', requireAdmin, async (req, res) => {
     }
 });
 
-// Add a new mount
-app.post('/api/admin/mounts', requireAdmin, async (req, res) => {
+// Add a new mount (with optional thumbnail upload)
+app.post('/api/admin/mounts', requireAdmin, upload.single('thumbnail'), async (req, res) => {
     try {
-        const { id, name, description, price, available } = req.body;
+        // When using FormData, all fields come as strings in req.body
+        const id = req.body.id;
+        const name = req.body.name;
+        const description = req.body.description || '';
+        const price = req.body.price;
+        const available = req.body.available === 'true' || req.body.available === true;
+        
+        console.log('Received mount data:', { id, name, description, price, available }); // Debug log
         
         // Validate input
-        if (!id || !name || price === undefined) {
+        if (!id || !name || !price) {
             return res.status(400).json({ 
                 success: false, 
-                error: 'Missing required fields: id, name, price' 
+                error: 'Missing required fields: id, name, price',
+                received: { id, name, price }
             });
         }
         
@@ -388,6 +432,11 @@ app.post('/api/admin/mounts', requireAdmin, async (req, res) => {
             available: available !== undefined ? available : true
         };
         
+        // Add thumbnail path if uploaded
+        if (req.file) {
+            newMount.thumbnail = `/uploads/mounts/${req.file.filename}`;
+        }
+        
         data.mounts.push(newMount);
         
         const success = await writeMountsData(data);
@@ -398,12 +447,13 @@ app.post('/api/admin/mounts', requireAdmin, async (req, res) => {
             res.status(500).json({ success: false, error: 'Failed to save mount' });
         }
     } catch (error) {
+        console.error('Error adding mount:', error);
         res.status(500).json({ success: false, error: 'Failed to add mount' });
     }
 });
 
-// Update an existing mount
-app.put('/api/admin/mounts/:id', requireAdmin, async (req, res) => {
+// Update an existing mount (with optional thumbnail upload)
+app.put('/api/admin/mounts/:id', requireAdmin, upload.single('thumbnail'), async (req, res) => {
     try {
         const { name, description, price, available } = req.body;
         const data = await readMountsData();
@@ -420,6 +470,11 @@ app.put('/api/admin/mounts/:id', requireAdmin, async (req, res) => {
         if (price !== undefined) data.mounts[mountIndex].price = parseFloat(price);
         if (available !== undefined) data.mounts[mountIndex].available = available;
         
+        // Update thumbnail if new one uploaded
+        if (req.file) {
+            data.mounts[mountIndex].thumbnail = `/uploads/mounts/${req.file.filename}`;
+        }
+        
         const success = await writeMountsData(data);
         
         if (success) {
@@ -428,6 +483,7 @@ app.put('/api/admin/mounts/:id', requireAdmin, async (req, res) => {
             res.status(500).json({ success: false, error: 'Failed to update mount' });
         }
     } catch (error) {
+        console.error('Error updating mount:', error);
         res.status(500).json({ success: false, error: 'Failed to update mount' });
     }
 });

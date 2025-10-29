@@ -209,6 +209,169 @@ header p {
     padding-right: 40px;
 }
 
+/* Mount Grid Styles */
+.mount-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    width: 100%;
+}
+
+.mount-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.mount-option:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.mount-option.selected {
+    border-color: #667eea;
+    background: linear-gradient(135deg, #f8f9ff 0%, #f0f1ff 100%);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.mount-option.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: #667eea;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.mount-thumbnail {
+    width: 100%;
+    height: 80px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Mount type specific thumbnails */
+.mount-thumbnail.no-mount {
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+    border: 2px dashed #999;
+}
+
+.mount-thumbnail.aluminium-alloy {
+    background: linear-gradient(135deg, #c0c0c0 0%, #808080 100%);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.mount-thumbnail.aluminium-shadow {
+    background: linear-gradient(135deg, #a0a0a0 0%, #606060 100%);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.mount-thumbnail.wood-natural {
+    background: linear-gradient(135deg, #d4a574 0%, #b8895f 100%);
+    position: relative;
+}
+
+.mount-thumbnail.wood-natural::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 3px,
+        rgba(0, 0, 0, 0.05) 3px,
+        rgba(0, 0, 0, 0.05) 6px
+    );
+}
+
+.mount-thumbnail.wood-black {
+    background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%);
+    position: relative;
+}
+
+.mount-thumbnail.wood-black::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 3px,
+        rgba(255, 255, 255, 0.05) 3px,
+        rgba(255, 255, 255, 0.05) 6px
+    );
+}
+
+.mount-thumbnail.acrylic-clear {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(200, 220, 255, 0.5) 100%);
+    border: 2px solid rgba(102, 126, 234, 0.3);
+    box-shadow: inset 0 2px 8px rgba(102, 126, 234, 0.2);
+    position: relative;
+}
+
+.mount-thumbnail.acrylic-clear::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 4px;
+}
+
+.mount-thumbnail-icon {
+    font-size: 2rem;
+    opacity: 0.6;
+}
+
+.mount-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #333;
+    text-align: center;
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.mount-price {
+    font-size: 0.8rem;
+    color: #667eea;
+    font-weight: 600;
+}
+
+.mount-price.free {
+    color: #28a745;
+}
+
 .price-display-group {
     background: linear-gradient(135deg, #f8f9ff 0%, #f0f1ff 100%);
     padding: 15px;

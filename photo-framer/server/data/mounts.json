@@ -4,43 +4,51 @@
       "id": "no-mount",
       "name": "No Mount",
       "description": "Standard frame without mount",
-      "price": 0.00,
+      "price": 0,
       "available": true
     },
     {
       "id": "aluminium-alloy",
       "name": "Aluminium Alloy Mount",
       "description": "Premium aluminium alloy mount for modern look",
-      "price": 25.00,
+      "price": 25,
       "available": true
     },
     {
       "id": "aluminium-shadow",
       "name": "Aluminium Shadow Mount",
       "description": "Aluminium mount with shadow effect for depth",
-      "price": 35.00,
+      "price": 35,
       "available": true
     },
     {
       "id": "wood-natural",
       "name": "Natural Wood Mount",
       "description": "Classic natural wood mount finish",
-      "price": 30.00,
+      "price": 30,
       "available": true
     },
     {
       "id": "wood-black",
       "name": "Black Wood Mount",
       "description": "Elegant black stained wood mount",
-      "price": 30.00,
+      "price": 30,
       "available": true
     },
     {
       "id": "acrylic-clear",
       "name": "Clear Acrylic Mount",
       "description": "Modern clear acrylic floating mount",
-      "price": 40.00,
+      "price": 40,
       "available": true
+    },
+    {
+      "id": "easel",
+      "name": "Easel",
+      "description": "Easel Tabletop",
+      "price": 15,
+      "available": true,
+      "thumbnail": "/uploads/mounts/mount-1761746402445-730689782.JPEG"
     }
   ]
 }

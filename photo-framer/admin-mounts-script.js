@@ -172,19 +172,45 @@ function displayMounts(mounts) {
 async function handleAddMount(e) {
     e.preventDefault();
     
-    const formData = {
-        id: document.getElementById('newId').value.trim(),
-        name: document.getElementById('newName').value.trim(),
-        description: document.getElementById('newDescription').value.trim(),
-        price: parseFloat(document.getElementById('newPrice').value),
-        available: true
-    };
+    const name = document.getElementById('newName').value.trim();
+    const description = document.getElementById('newDescription').value.trim();
+    const price = document.getElementById('newPrice').value;
+    
+    // Auto-generate ID from name
+    const id = name.toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-')          // Replace spaces with hyphens
+        .replace(/-+/g, '-')           // Replace multiple hyphens with single
+        .trim();
+    
+    if (!id) {
+        showToast('Please enter a valid mount name', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('name', name);
+    formData.append('description', description);
+    formData.append('price', price);
+    formData.append('available', 'true');
+    
+    // Add thumbnail if provided
+    const thumbnailInput = document.getElementById('newThumbnail');
+    if (thumbnailInput.files[0]) {
+        formData.append('thumbnail', thumbnailInput.files[0]);
+    }
     
     try {
+        const headers = {};
+        if (sessionId) {
+            headers['x-session-id'] = sessionId;
+        }
+        
         const response = await fetch(`${API_BASE}/admin/mounts`, {
             method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(formData)
+            headers: headers,
+            body: formData
         });
         
         const data = await response.json();
@@ -218,6 +244,17 @@ async function openEditModal(mountId) {
                 document.getElementById('editDescription').value = mount.description || '';
                 document.getElementById('editPrice').value = mount.price;
                 
+                // Show current thumbnail if exists
+                const currentThumbnailDiv = document.getElementById('currentThumbnail');
+                if (mount.thumbnail) {
+                    currentThumbnailDiv.innerHTML = `
+                        <p style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">Current thumbnail:</p>
+                        <img src="${mount.thumbnail}" alt="${mount.name}" style="max-width: 150px; border-radius: 5px; border: 2px solid #e0e0e0;">
+                    `;
+                } else {
+                    currentThumbnailDiv.innerHTML = '<p style="font-size: 0.9rem; color: #999;">No thumbnail currently set</p>';
+                }
+                
                 editModal.classList.add('show');
             }
         }
@@ -238,17 +275,37 @@ async function handleEditMount(e) {
     e.preventDefault();
     
     const mountId = document.getElementById('editMountId').value;
-    const formData = {
-        name: document.getElementById('editName').value.trim(),
-        description: document.getElementById('editDescription').value.trim(),
-        price: parseFloat(document.getElementById('editPrice').value)
-    };
+    const thumbnailInput = document.getElementById('editThumbnail');
+    
+    // Use FormData if thumbnail is being uploaded, otherwise use JSON
+    let body, headers;
+    
+    if (thumbnailInput.files[0]) {
+        const formData = new FormData();
+        formData.append('name', document.getElementById('editName').value.trim());
+        formData.append('description', document.getElementById('editDescription').value.trim());
+        formData.append('price', parseFloat(document.getElementById('editPrice').value));
+        formData.append('thumbnail', thumbnailInput.files[0]);
+        
+        body = formData;
+        headers = {};
+        if (sessionId) {
+            headers['x-session-id'] = sessionId;
+        }
+    } else {
+        body = JSON.stringify({
+            name: document.getElementById('editName').value.trim(),
+            description: document.getElementById('editDescription').value.trim(),
+            price: parseFloat(document.getElementById('editPrice').value)
+        });
+        headers = getAuthHeaders();
+    }
     
     try {
         const response = await fetch(`${API_BASE}/admin/mounts/${mountId}`, {
             method: 'PUT',
-            headers: getAuthHeaders(),
-            body: JSON.stringify(formData)
+            headers: headers,
+            body: body
         });
         
         const data = await response.json();

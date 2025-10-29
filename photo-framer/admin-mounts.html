@@ -22,15 +22,10 @@
             <div class="add-frame-section">
                 <h2>Add New Mount Option</h2>
                 <form id="addMountForm">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="newId">ID (e.g., wood-walnut):</label>
-                            <input type="text" id="newId" required placeholder="wood-walnut">
-                        </div>
-                        <div class="form-group">
-                            <label for="newName">Name:</label>
-                            <input type="text" id="newName" required placeholder="Walnut Wood Mount">
-                        </div>
+                    <div class="form-group">
+                        <label for="newName">Name:</label>
+                        <input type="text" id="newName" required placeholder="Walnut Wood Mount">
+                        <small class="form-hint">A unique ID will be auto-generated from the name</small>
                     </div>
                     <div class="form-group">
                         <label for="newDescription">Description:</label>
@@ -39,6 +34,11 @@
                     <div class="form-group">
                         <label for="newPrice">Price ($):</label>
                         <input type="number" id="newPrice" step="0.01" required placeholder="35.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="newThumbnail">Thumbnail Image:</label>
+                        <input type="file" id="newThumbnail" accept="image/*">
+                        <small class="form-hint">Upload a thumbnail image for this mount option (optional)</small>
                     </div>
                     <button type="submit" class="btn-primary">Add Mount Option</button>
                 </form>
@@ -71,6 +71,12 @@
                     <div class="form-group">
                         <label for="editPrice">Price ($):</label>
                         <input type="number" id="editPrice" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editThumbnail">Thumbnail Image:</label>
+                        <input type="file" id="editThumbnail" accept="image/*">
+                        <small class="form-hint">Upload a new thumbnail to replace the current one (optional)</small>
+                        <div id="currentThumbnail" style="margin-top: 10px;"></div>
                     </div>
                     <div class="modal-actions">
                         <button type="submit" class="btn-primary">Save Changes</button>
