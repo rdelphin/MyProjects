@@ -746,7 +746,8 @@ app.get('/api/download/:orderId/:token', async (req, res) => {
 // Start server
 app.listen(PORT, () => {
     console.log(`Photo Framer API server running on port ${PORT}`);
-    console.log(`Frontend: http://localhost:${PORT}/`);
+    console.log(`Landing Page: http://localhost:${PORT}/`);
+    console.log(`Photo Framer Tool: http://localhost:${PORT}/framer.html`);
     console.log(`Admin Panel: http://localhost:${PORT}/admin.html`);
     console.log(`API: http://localhost:${PORT}/api/frames`);
     console.log(`\n📧 Email Configuration:`);
