@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Management - Modenlo Admin</title>
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🖼️ Modenlo - Admin Panel</h1>
+            <div class="admin-nav">
+                <a href="admin.html" class="active">Frame Management</a>
+                <a href="admin-mounts.html">Mount Management</a>
+                <a href="admin-orders.html">Orders</a>
+            </div>
+        </div>
+        
+        <div class="admin-content">
+            <!-- Add New Frame Section -->
+            <div class="add-frame-section">
+                <h2>Add New Frame Size</h2>
+                <form id="addFrameForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="newSize">Size (e.g., 12x16):</label>
+                            <input type="text" id="newSize" required placeholder="12x16">
+                        </div>
+                        <div class="form-group">
+                            <label for="newWidth">Width (pixels at 300 DPI):</label>
+                            <input type="number" id="newWidth" required placeholder="3600">
+                        </div>
+                        <div class="form-group">
+                            <label for="newHeight">Height (pixels at 300 DPI):</label>
+                            <input type="number" id="newHeight" required placeholder="4800">
+                        </div>
+                        <div class="form-group">
+                            <label for="newPrice">Price ($):</label>
+                            <input type="number" id="newPrice" step="0.01" required placeholder="49.99">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary">Add Frame Size</button>
+                </form>
+            </div>
+
+            <!-- Frames List Section -->
+            <div class="frames-section">
+                <h2>Current Frame Sizes</h2>
+                <div class="frames-list" id="framesList">
+                    <p class="loading">Loading frames...</p>
+                </div>
+            </div>
+        <!-- Edit Modal -->
+        <div class="modal" id="editModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Edit Frame</h2>
+                    <button class="modal-close" id="closeModal">&times;</button>
+                </div>
+                <form id="editFrameForm">
+                    <input type="hidden" id="editFrameId">
+                    <div class="form-group">
+                        <label for="editSize">Size:</label>
+                        <input type="text" id="editSize" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="editWidth">Width (pixels at 300 DPI):</label>
+                        <input type="number" id="editWidth" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editHeight">Height (pixels at 300 DPI):</label>
+                        <input type="number" id="editHeight" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editPrice">Price ($):</label>
+                        <input type="number" id="editPrice" step="0.01" required>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                        <button type="button" class="btn-secondary" id="cancelEdit">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Message Toast -->
+        <div class="toast" id="toast"></div>
+        </div>
+    </div>
+
+    <script src="admin-script.js"></script>
+</body>
+</html>

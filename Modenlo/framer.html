@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Frame - Modenlo</title>
+    <link rel="stylesheet" href="landing-style.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="logo/logo_noSlogan.png" alt="Modenlo" class="logo-image">
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#how-it-works">How It Works</a>
+                <a href="index.html#categories">Shop</a>
+                <a href="cart.html" class="cart-link">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-count" id="cartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>Modenlo</h1>
+            <p>Upload, frame, and download your photos</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-box">
+                    <input type="file" id="photoUpload" accept="image/*" hidden>
+                    <label for="photoUpload" class="upload-label">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span>Click to Upload Photo</span>
+                        <small>or drag and drop</small>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Editor Section -->
+            <div class="editor-section" id="editorSection" style="display: none;">
+                <!-- Resolution Warning Notification -->
+                <div class="resolution-warning" id="resolutionWarning" style="display: none;">
+                    <div class="warning-icon">⚠️</div>
+                    <div class="warning-content">
+                        <strong>Image Resolution Warning</strong>
+                        <p id="warningMessage"></p>
+                    </div>
+                    <button class="warning-close" id="closeWarning">&times;</button>
+                </div>
+
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="frameSize">Frame Size:</label>
+                        <select id="frameSize">
+                            <!-- Options will be populated from API -->
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Mount Option:</label>
+                        <div class="mount-grid" id="mountGrid">
+                            <!-- Options will be populated from API -->
+                        </div>
+                    </div>
+
+                    <div class="control-group price-display-group">
+                        <label>Total Price:</label>
+                        <div class="price-display">
+                            <span class="price-breakdown">
+                                Frame: <span id="framePriceDisplay">$0.00</span><br>
+                                Mount: <span id="mountPriceDisplay">$0.00</span>
+                            </span>
+                            <span class="total-price" id="totalPriceDisplay">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label>Orientation:</label>
+                        <div class="orientation-controls">
+                            <button id="portraitBtn" class="orientation-btn active">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="7" y="2" width="10" height="20" rx="2"></rect>
+                                </svg>
+                                <span>Portrait</span>
+                            </button>
+                            <button id="landscapeBtn" class="orientation-btn">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="2" y="7" width="20" height="10" rx="2"></rect>
+                                </svg>
+                                <span>Landscape</span>
+                            </button>
+                        </div>
+                        <small class="orientation-hint" id="orientationHint"></small>
+                    </div>
+
+
+                    <div class="control-group">
+                        <label for="zoomSlider">Zoom: <span id="zoomValue">100</span>%</label>
+                        <input type="range" id="zoomSlider" min="100" max="300" value="100" step="1">
+                    </div>
+
+                    <div class="control-group">
+                        <label>Position:</label>
+                        <div class="position-controls">
+                            <button id="resetPosition" class="btn-secondary">Reset Position</button>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="addToCartBtn" class="btn-primary">Add to Cart</button>
+                        <button id="uploadNewBtn" class="btn-secondary">Upload New Photo</button>
+                    </div>
+                    
+                    <!-- Cart Icon -->
+                    <div class="cart-icon-container">
+                        <a href="cart.html" class="cart-icon-link">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            <span class="cart-badge" id="cartBadge">0</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="preview-container">
+                    <div class="frame-wrapper" id="frameWrapper">
+                        <div class="frame" id="frame">
+                            <div class="canvas-container" id="canvasContainer">
+                                <canvas id="photoCanvas"></canvas>
+                                <canvas id="cropOverlay"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="preview-note">Drag the photo to reposition • Use zoom slider to resize • Darker areas will be cropped</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toastMessage">✅ Item added to cart!</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
