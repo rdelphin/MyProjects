@@ -194,10 +194,17 @@ function setupCreatePrintButton() {
 
 // Update cart count
 function updateCartCount() {
-    const cartCountEl = document.getElementById('cartCount');
-    if (cartCountEl) {
-        const cart = JSON.parse(localStorage.getItem('modenloCart') || '[]');
-        cartCountEl.textContent = cart.length;
+    const cart = localStorage.getItem('modenloCart');
+    const itemCount = cart ? JSON.parse(cart).length : 0;
+    const cartCountElement = document.getElementById('cartCount');
+    
+    if (cartCountElement) {
+        cartCountElement.textContent = itemCount;
+        if (itemCount > 0) {
+            cartCountElement.style.display = 'flex';
+        } else {
+            cartCountElement.style.display = 'none';
+        }
     }
 }
 

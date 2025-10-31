@@ -1,15 +1,15 @@
 // Update cart count on page load
 function updateCartCount() {
     const cart = localStorage.getItem('modenloCart');
-    const cartCount = cart ? JSON.parse(cart).length : 0;
-    const cartBadge = document.getElementById('cartCount');
+    const itemCount = cart ? JSON.parse(cart).length : 0;
+    const cartCountElement = document.getElementById('cartCount');
     
-    if (cartBadge) {
-        cartBadge.textContent = cartCount;
-        if (cartCount > 0) {
-            cartBadge.classList.add('show');
+    if (cartCountElement) {
+        cartCountElement.textContent = itemCount;
+        if (itemCount > 0) {
+            cartCountElement.style.display = 'flex';
         } else {
-            cartBadge.classList.remove('show');
+            cartCountElement.style.display = 'none';
         }
     }
 }

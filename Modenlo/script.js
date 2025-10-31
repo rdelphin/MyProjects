@@ -37,25 +37,25 @@ let state = {
 
 // DOM elements
 const photoUpload = document.getElementById('photoUpload');
-const uploadSection = document.getElementById('uploadSection');
-const editorSection = document.getElementById('editorSection');
+const uploadArea = document.getElementById('uploadArea');
+const previewArea = document.getElementById('previewArea');
 const photoCanvas = document.getElementById('photoCanvas');
 const ctx = photoCanvas.getContext('2d');
 const cropOverlay = document.getElementById('cropOverlay');
 const cropCtx = cropOverlay.getContext('2d');
 const frameSizeSelect = document.getElementById('frameSize');
+const orientationSelect = document.getElementById('orientationSelect');
 const zoomSlider = document.getElementById('zoomSlider');
 const zoomValue = document.getElementById('zoomValue');
 const resetPositionBtn = document.getElementById('resetPosition');
 const addToCartBtn = document.getElementById('addToCartBtn');
 const uploadNewBtn = document.getElementById('uploadNewBtn');
+const changeImageBtn = document.getElementById('changeImageBtn');
 const cartBadge = document.getElementById('cartBadge');
-const frame = document.getElementById('frame');
-const canvasContainer = document.getElementById('canvasContainer');
-const uploadLabel = document.querySelector('.upload-label');
-const portraitBtn = document.getElementById('portraitBtn');
-const landscapeBtn = document.getElementById('landscapeBtn');
-const orientationHint = document.getElementById('orientationHint');
+const cartCount = document.getElementById('cartCount');
+const uploadDropzone = document.querySelector('.upload-dropzone');
+const totalPriceMain = document.getElementById('totalPriceMain');
+const totalCentsMain = document.getElementById('totalCentsMain');
 const resolutionWarning = document.getElementById('resolutionWarning');
 const warningMessage = document.getElementById('warningMessage');
 const closeWarningBtn = document.getElementById('closeWarning');
@@ -136,18 +136,18 @@ function populateFrameDropdown(frames) {
 
 // Update price display
 function updatePriceDisplay() {
-    const framePriceDisplay = document.getElementById('framePriceDisplay');
-    const mountPriceDisplay = document.getElementById('mountPriceDisplay');
-    const totalPriceDisplay = document.getElementById('totalPriceDisplay');
-    
     if (FRAME_SIZES[state.frameSize] && MOUNT_OPTIONS[state.selectedMount]) {
         const framePrice = FRAME_SIZES[state.frameSize].price;
         const mountPrice = MOUNT_OPTIONS[state.selectedMount].price;
         const totalPrice = framePrice + mountPrice;
         
-        if (framePriceDisplay) framePriceDisplay.textContent = `$${framePrice.toFixed(2)}`;
-        if (mountPriceDisplay) mountPriceDisplay.textContent = `$${mountPrice.toFixed(2)}`;
-        if (totalPriceDisplay) totalPriceDisplay.textContent = `$${totalPrice.toFixed(2)}`;
+        // Update main price display
+        if (totalPriceMain && totalCentsMain) {
+            const dollars = Math.floor(totalPrice);
+            const cents = Math.round((totalPrice - dollars) * 100);
+            totalPriceMain.textContent = dollars;
+            totalCentsMain.textContent = cents.toString().padStart(2, '0');
+        }
     }
 }
 
@@ -229,13 +229,11 @@ function useFallbackMounts() {
     updatePriceDisplay();
 }
 
-// Populate mount grid
+// Populate mount grid - image-focused card design
 function populateMountGrid(mounts) {
     const mountGrid = document.getElementById('mountGrid');
     
     mountGrid.innerHTML = mounts.map(mount => {
-        const priceText = mount.price > 0 ? `+$${mount.price.toFixed(2)}` : 'Free';
-        const priceClass = mount.price > 0 ? '' : 'free';
         const isSelected = mount.id === state.selectedMount;
         
         // Determine icon based on mount type (fallback if no thumbnail)
@@ -245,47 +243,79 @@ function populateMountGrid(mounts) {
         else if (mount.id.includes('acrylic')) icon = '💎';
         else if (mount.id === 'no-mount') icon = '⊗';
         
-        // Use actual thumbnail if available, otherwise use CSS background with icon
-        let thumbnailContent;
+        // Image content - use thumbnail if available, otherwise use placeholder icon
+        let imageContent;
         if (mount.thumbnail) {
-            thumbnailContent = `<img src="${mount.thumbnail}" alt="${mount.name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">`;
+            imageContent = `<img src="${mount.thumbnail}" alt="${mount.name}">`;
         } else {
-            thumbnailContent = `<span class="mount-thumbnail-icon">${icon}</span>`;
+            imageContent = `<span class="mount-card-image-placeholder">${icon}</span>`;
         }
         
         return `
-            <div class="mount-option ${isSelected ? 'selected' : ''}" data-mount-id="${mount.id}">
-                <div class="mount-thumbnail ${mount.thumbnail ? '' : mount.id}">
-                    ${thumbnailContent}
+            <div class="mount-card ${isSelected ? 'selected' : ''}" data-mount-id="${mount.id}">
+                <div class="mount-card-image">
+                    ${imageContent}
+                    <div class="mount-card-label">
+                        ${mount.name.toUpperCase()}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 11 12 14 22 4"></polyline>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                    </div>
                 </div>
-                <div class="mount-name">${mount.name}</div>
-                <div class="mount-price ${priceClass}">${priceText}</div>
+                <div class="mount-card-name">${mount.name}</div>
             </div>
         `;
     }).join('');
     
-    // Add click event listeners to all mount options
-    mountGrid.querySelectorAll('.mount-option').forEach(option => {
-        option.addEventListener('click', handleMountSelection);
+    // Add click event listeners to all mount cards
+    mountGrid.querySelectorAll('.mount-card').forEach(card => {
+        card.addEventListener('click', handleMountSelection);
     });
+    
+    // Update mount header
+    updateMountHeader();
 }
 
 // Handle mount selection
 function handleMountSelection(e) {
-    const mountOption = e.currentTarget;
-    const mountId = mountOption.dataset.mountId;
+    const mountCard = e.currentTarget;
+    const mountId = mountCard.dataset.mountId;
     
     // Update state
     state.selectedMount = mountId;
     
     // Update UI - remove selected class from all and add to clicked
-    document.querySelectorAll('.mount-option').forEach(opt => {
-        opt.classList.remove('selected');
+    document.querySelectorAll('.mount-card').forEach(card => {
+        card.classList.remove('selected');
     });
-    mountOption.classList.add('selected');
+    mountCard.classList.add('selected');
     
-    // Update price display
+    // Update price display and mount header
     updatePriceDisplay();
+    updateMountHeader();
+}
+
+// Update mount header with selected mount info
+function updateMountHeader() {
+    const mountSelectedName = document.getElementById('mountSelectedName');
+    const mountSelectedPrice = document.getElementById('mountSelectedPrice');
+    
+    if (MOUNT_OPTIONS[state.selectedMount]) {
+        const mount = MOUNT_OPTIONS[state.selectedMount];
+        
+        if (mountSelectedName) {
+            mountSelectedName.textContent = mount.name;
+        }
+        
+        if (mountSelectedPrice) {
+            if (mount.price > 0) {
+                mountSelectedPrice.textContent = `+$${mount.price.toFixed(2)}`;
+            } else {
+                mountSelectedPrice.textContent = '';
+            }
+        }
+    }
 }
 
 // Initialize event listeners
@@ -301,33 +331,42 @@ function init() {
     photoUpload.addEventListener('change', handleFileSelect);
     
     // Drag and drop
-    uploadLabel.addEventListener('dragover', handleDragOver);
-    uploadLabel.addEventListener('dragleave', handleDragLeave);
-    uploadLabel.addEventListener('drop', handleDrop);
+    if (uploadDropzone) {
+        uploadDropzone.addEventListener('dragover', handleDragOver);
+        uploadDropzone.addEventListener('dragleave', handleDragLeave);
+        uploadDropzone.addEventListener('drop', handleDrop);
+    }
     
     // Controls
     frameSizeSelect.addEventListener('change', handleFrameSizeChange);
+    if (orientationSelect) {
+        orientationSelect.addEventListener('change', handleOrientationSelectChange);
+    }
     zoomSlider.addEventListener('input', handleZoomChange);
     resetPositionBtn.addEventListener('click', resetPosition);
     
-    // Add to cart button - make sure it exists before adding listener
+    // Add to cart button
     if (addToCartBtn) {
         addToCartBtn.addEventListener('click', addToCart);
-    } else {
-        console.error('Add to Cart button not found');
+        // Disable initially until image is uploaded
+        addToCartBtn.disabled = true;
     }
     
-    uploadNewBtn.addEventListener('click', uploadNew);
+    // Upload new and change image buttons
+    if (uploadNewBtn) {
+        uploadNewBtn.addEventListener('click', uploadNew);
+    }
+    if (changeImageBtn) {
+        changeImageBtn.addEventListener('click', uploadNew);
+    }
     
     // Update cart badge on load
     updateCartBadge();
     
-    // Orientation controls
-    portraitBtn.addEventListener('click', () => handleOrientationChange('portrait'));
-    landscapeBtn.addEventListener('click', () => handleOrientationChange('landscape'));
-    
     // Warning close button
-    closeWarningBtn.addEventListener('click', hideResolutionWarning);
+    if (closeWarningBtn) {
+        closeWarningBtn.addEventListener('click', hideResolutionWarning);
+    }
     
     // Canvas dragging
     photoCanvas.addEventListener('mousedown', startDrag);
@@ -339,6 +378,15 @@ function init() {
     photoCanvas.addEventListener('touchstart', handleTouchStart);
     photoCanvas.addEventListener('touchmove', handleTouchMove);
     photoCanvas.addEventListener('touchend', endDrag);
+}
+
+// Handle orientation select change
+function handleOrientationSelectChange(e) {
+    state.orientation = e.target.value;
+    if (state.uploadedImage) {
+        updateCanvas();
+        checkResolution();
+    }
 }
 
 // DPI Calculation and Resolution Check Functions
@@ -442,22 +490,28 @@ function handleFileSelect(e) {
 function handleDragOver(e) {
     e.preventDefault();
     e.stopPropagation();
-    uploadLabel.style.borderColor = '#764ba2';
-    uploadLabel.style.background = '#f0f1ff';
+    if (uploadDropzone) {
+        uploadDropzone.style.borderColor = 'var(--blue-hover)';
+        uploadDropzone.style.background = '#EFF6FF';
+    }
 }
 
 function handleDragLeave(e) {
     e.preventDefault();
     e.stopPropagation();
-    uploadLabel.style.borderColor = '#667eea';
-    uploadLabel.style.background = '#f8f9ff';
+    if (uploadDropzone) {
+        uploadDropzone.style.borderColor = 'var(--blue-primary)';
+        uploadDropzone.style.background = 'var(--background)';
+    }
 }
 
 function handleDrop(e) {
     e.preventDefault();
     e.stopPropagation();
-    uploadLabel.style.borderColor = '#667eea';
-    uploadLabel.style.background = '#f8f9ff';
+    if (uploadDropzone) {
+        uploadDropzone.style.borderColor = 'var(--blue-primary)';
+        uploadDropzone.style.background = 'var(--background)';
+    }
     
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) {
@@ -496,64 +550,57 @@ function detectImageOrientation(img) {
     if (imgAspect > 1) {
         // Image is wider than tall - suggest landscape
         state.orientation = 'landscape';
-        updateOrientationUI();
-        showOrientationHint('Landscape orientation detected and applied');
+        updateOrientationSelectUI();
     } else {
         // Image is taller than wide - suggest portrait
         state.orientation = 'portrait';
-        updateOrientationUI();
-        showOrientationHint('Portrait orientation detected and applied');
+        updateOrientationSelectUI();
     }
 }
 
-// Handle orientation change
-function handleOrientationChange(orientation) {
-    if (state.orientation === orientation) return;
-    
-    state.orientation = orientation;
-    updateOrientationUI();
-    resetPosition();
-    
-    // Clear hint when manually changed
-    orientationHint.textContent = '';
-    
-    // Check resolution when orientation changes
-    checkResolution();
-}
-
-// Update orientation button states
-function updateOrientationUI() {
-    if (state.orientation === 'portrait') {
-        portraitBtn.classList.add('active');
-        landscapeBtn.classList.remove('active');
-    } else {
-        portraitBtn.classList.remove('active');
-        landscapeBtn.classList.add('active');
+// Update orientation select dropdown UI
+function updateOrientationSelectUI() {
+    if (orientationSelect) {
+        orientationSelect.value = state.orientation;
     }
 }
 
-// Show orientation hint with auto-fade
-function showOrientationHint(message) {
-    orientationHint.textContent = message;
-    
-    // Auto-fade hint after 3 seconds
-    setTimeout(() => {
-        orientationHint.textContent = '';
-    }, 3000);
+// Setup canvas size
+function setupCanvas() {
+    const canvasSize = 600;
+    photoCanvas.width = canvasSize;
+    photoCanvas.height = canvasSize;
+    cropOverlay.width = canvasSize;
+    cropOverlay.height = canvasSize;
 }
 
 function showEditor() {
-    uploadSection.style.display = 'none';
-    editorSection.style.display = 'grid';
+    // Hide upload area, show preview area
+    if (uploadArea) uploadArea.style.display = 'none';
+    if (previewArea) previewArea.style.display = 'flex';
+    
+    // Enable add to cart button
+    if (addToCartBtn) addToCartBtn.disabled = false;
+    
     setupCanvas();
     updateCanvas();
+    updatePriceDisplay();
 }
 
 function uploadNew() {
-    uploadSection.style.display = 'flex';
-    editorSection.style.display = 'none';
+    // Show upload area, hide preview area
+    if (uploadArea) uploadArea.style.display = 'flex';
+    if (previewArea) previewArea.style.display = 'none';
+    
+    // Disable add to cart button
+    if (addToCartBtn) addToCartBtn.disabled = true;
+    
+    // Reset file input
     photoUpload.value = '';
     state.uploadedImage = null;
+    
+    // Hide resolution warning
+    hideResolutionWarning();
 }
 
 // Frame controls
@@ -568,15 +615,6 @@ function handleFrameSizeChange(e) {
     checkResolution();
 }
 
-function setupCanvas() {
-    // Fixed display size - keep canvas size constant
-    const displaySize = 600;
-    
-    photoCanvas.width = displaySize;
-    photoCanvas.height = displaySize;
-    cropOverlay.width = displaySize;
-    cropOverlay.height = displaySize;
-}
 
 function handleZoomChange(e) {
     state.currentZoom = parseInt(e.target.value);
@@ -977,9 +1015,20 @@ function saveCart(cart) {
 
 function updateCartBadge() {
     const cart = getCart();
+    const itemCount = cart.length;
+    
+    // Update navbar cart count
+    if (cartCount) {
+        cartCount.textContent = itemCount;
+        if (itemCount > 0) {
+            cartCount.style.display = 'flex';
+        }
+    }
+    
+    // Update any other cart badge (if present on page)
     if (cartBadge) {
-        cartBadge.textContent = cart.length;
-        cartBadge.style.display = cart.length > 0 ? 'flex' : 'none';
+        cartBadge.textContent = itemCount;
+        cartBadge.style.display = itemCount > 0 ? 'flex' : 'none';
     }
 }
 
@@ -991,13 +1040,17 @@ function addToCart(e) {
         return;
     }
     
-    // Generate preview image as data URL
+    // Generate the FINAL framed image (this is what user will download)
+    const finalCanvas = generateFinalImage();
+    const finalImageData = finalCanvas.toDataURL('image/png', 1.0);
+    
+    // Generate preview thumbnail
     const previewCanvas = document.createElement('canvas');
     const previewCtx = previewCanvas.getContext('2d');
     previewCanvas.width = 200;
     previewCanvas.height = 200;
     
-    // Draw scaled preview
+    // Draw scaled preview of the final image
     const dimensions = getFrameDimensions(state.frameSize, state.orientation);
     const aspect = dimensions.width / dimensions.height;
     
@@ -1015,11 +1068,12 @@ function addToCart(e) {
     
     previewCtx.fillStyle = 'white';
     previewCtx.fillRect(0, 0, 200, 200);
-    previewCtx.drawImage(state.uploadedImage, offsetX, offsetY, previewWidth, previewHeight);
+    // Draw from the final canvas instead of original image
+    previewCtx.drawImage(finalCanvas, offsetX, offsetY, previewWidth, previewHeight);
     
     const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.7);
     
-    // Create cart item
+    // Create cart item with FINAL processed image
     const cartItem = {
         id: Date.now(),
         frameSize: state.frameSize,
@@ -1031,7 +1085,7 @@ function addToCart(e) {
         orientation: state.orientation,
         zoom: state.currentZoom,
         position: { ...state.imagePosition },
-        imageData: state.uploadedImage.src,
+        imageData: finalImageData, // This is now the FINAL processed image
         previewImage: previewDataUrl,
         totalPrice: (FRAME_SIZES[state.frameSize] ? FRAME_SIZES[state.frameSize].price : 0) + 
                    (MOUNT_OPTIONS[state.selectedMount] ? MOUNT_OPTIONS[state.selectedMount].price : 0),
@@ -1049,6 +1103,88 @@ function addToCart(e) {
     // Stay on current page - user can manually click "Upload New Photo" if they want to add another item
     // Or click cart icon to view their cart
     // Cart badge will update automatically to show item was added
+}
+
+// Generate final framed image for download/cart
+function generateFinalImage() {
+    const outputCanvas = document.createElement('canvas');
+    const outputCtx = outputCanvas.getContext('2d');
+    
+    // Get dimensions based on current orientation
+    const dimensions = getFrameDimensions(state.frameSize, state.orientation);
+    
+    // Set canvas to exact print dimensions
+    outputCanvas.width = dimensions.width;
+    outputCanvas.height = dimensions.height;
+    
+    // Fill with white background
+    outputCtx.fillStyle = 'white';
+    outputCtx.fillRect(0, 0, dimensions.width, dimensions.height);
+    
+    // Calculate scaling from display canvas to output canvas
+    const displaySize = photoCanvas.width; // 600px
+    
+    // Calculate crop area in display coordinates
+    const printAspect = dimensions.width / dimensions.height;
+    let cropWidth, cropHeight;
+    
+    if (printAspect > 1) {
+        // Landscape
+        cropWidth = displaySize;
+        cropHeight = displaySize / printAspect;
+    } else {
+        // Portrait
+        cropHeight = displaySize;
+        cropWidth = displaySize * printAspect;
+    }
+    
+    // Calculate image dimensions with zoom (same logic as updateCanvas)
+    const zoom = state.currentZoom / 100;
+    const imgAspect = state.uploadedImage.width / state.uploadedImage.height;
+    const cropAspect = cropWidth / cropHeight;
+    
+    let drawWidth, drawHeight;
+    
+    // Fit image to be contained within the crop area at 100% zoom
+    if (imgAspect > cropAspect) {
+        // Image is wider - fit to crop width
+        drawWidth = cropWidth * zoom;
+        drawHeight = drawWidth / imgAspect;
+    } else {
+        // Image is taller - fit to crop height
+        drawHeight = cropHeight * zoom;
+        drawWidth = drawHeight * imgAspect;
+    }
+    
+    // Center the image and apply position offset (in display coordinates)
+    const displayX = (displaySize - drawWidth) / 2 + state.imagePosition.x;
+    const displayY = (displaySize - drawHeight) / 2 + state.imagePosition.y;
+    
+    // Calculate crop area position
+    let cropX, cropY;
+    if (printAspect > 1) {
+        cropX = 0;
+        cropY = (displaySize - cropHeight) / 2;
+    } else {
+        cropX = (displaySize - cropWidth) / 2;
+        cropY = 0;
+    }
+    
+    // Calculate which part of the image to draw
+    // We need to map from crop area to image coordinates
+    const sourceX = (cropX - displayX) * (state.uploadedImage.width / drawWidth);
+    const sourceY = (cropY - displayY) * (state.uploadedImage.height / drawHeight);
+    const sourceWidth = cropWidth * (state.uploadedImage.width / drawWidth);
+    const sourceHeight = cropHeight * (state.uploadedImage.height / drawHeight);
+    
+    // Draw the cropped portion of the image to fill the output canvas
+    outputCtx.drawImage(
+        state.uploadedImage,
+        sourceX, sourceY, sourceWidth, sourceHeight,
+        0, 0, dimensions.width, dimensions.height
+    );
+    
+    return outputCanvas;
 }
 
 // Toast notification function

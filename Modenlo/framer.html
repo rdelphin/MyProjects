@@ -32,126 +32,95 @@
     </nav>
 
     <div class="container">
-        <header>
-            <h1>Modenlo</h1>
-            <p>Upload, frame, and download your photos</p>
-        </header>
-
         <div class="main-content">
-            <!-- Upload Section -->
-            <div class="upload-section" id="uploadSection">
-                <div class="upload-box">
-                    <input type="file" id="photoUpload" accept="image/*" hidden>
-                    <label for="photoUpload" class="upload-label">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="17 8 12 3 7 8"></polyline>
-                            <line x1="12" y1="3" x2="12" y2="15"></line>
-                        </svg>
-                        <span>Click to Upload Photo</span>
-                        <small>or drag and drop</small>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Editor Section -->
-            <div class="editor-section" id="editorSection" style="display: none;">
-                <!-- Resolution Warning Notification -->
-                <div class="resolution-warning" id="resolutionWarning" style="display: none;">
-                    <div class="warning-icon">⚠️</div>
-                    <div class="warning-content">
-                        <strong>Image Resolution Warning</strong>
-                        <p id="warningMessage"></p>
+            <!-- Two Column Layout -->
+            <div class="framer-grid">
+                <!-- Left Column - Image Upload/Preview -->
+                <div class="upload-preview-col">
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="photoUpload" accept="image/*" hidden>
+                        <label for="photoUpload" class="upload-dropzone">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1"></path>
+                                <polyline points="9 15 12 12 15 15"></polyline>
+                                <line x1="12" y1="12" x2="12" y2="21"></line>
+                            </svg>
+                            <span class="upload-text">Drag & Drop Image Here</span>
+                            <span class="upload-or">OR</span>
+                            <button type="button" class="choose-file-btn">Choose File</button>
+                        </label>
+                        <p class="upload-help">Select an image from your device. For best quality, please upload an image with the highest resolution (DPI) possible.</p>
                     </div>
-                    <button class="warning-close" id="closeWarning">&times;</button>
+
+                    <!-- Preview Canvas (Hidden Initially) -->
+                    <div class="preview-area" id="previewArea" style="display: none;">
+                        <div class="canvas-wrapper">
+                            <canvas id="photoCanvas"></canvas>
+                            <canvas id="cropOverlay"></canvas>
+                        </div>
+                        <button id="changeImageBtn" class="change-image-btn">Change Image</button>
+                    </div>
+
+                    <!-- Resolution Warning -->
+                    <div class="resolution-warning" id="resolutionWarning" style="display: none;">
+                        <div class="warning-icon">⚠️</div>
+                        <div class="warning-content">
+                            <strong>Image Resolution Warning</strong>
+                            <p id="warningMessage"></p>
+                        </div>
+                        <button class="warning-close" id="closeWarning">&times;</button>
+                    </div>
                 </div>
 
-                <div class="controls">
-                    <div class="control-group">
-                        <label for="frameSize">Frame Size:</label>
-                        <select id="frameSize">
+                <!-- Right Column - Order Form -->
+                <div class="order-form-col">
+                    <h1 class="order-title">Order Your Frame</h1>
+                    
+                    <div class="price-cart-row">
+                        <div class="price-display-main">
+                            <span class="currency">$</span>
+                            <span class="amount" id="totalPriceMain">29</span>
+                            <span class="cents" id="totalCentsMain">99</span>
+                        </div>
+                        <button id="addToCartBtn" class="add-to-cart-main">ADD TO CART</button>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">PRINT SIZE</label>
+                        <select id="frameSize" class="form-select">
                             <!-- Options will be populated from API -->
                         </select>
                     </div>
 
-                    <div class="control-group">
-                        <label>Mount Option:</label>
-                        <div class="mount-grid" id="mountGrid">
-                            <!-- Options will be populated from API -->
+                    <div class="form-section">
+                        <label class="form-label">ORIENTATION</label>
+                        <select id="orientationSelect" class="form-select">
+                            <option value="portrait">Portrait</option>
+                            <option value="landscape">Landscape</option>
+                        </select>
+                    </div>
+
+                    <div class="form-section">
+                        <label class="form-label">
+                            ZOOM
+                            <span class="zoom-value" id="zoomValue">100%</span>
+                        </label>
+                        <input type="range" id="zoomSlider" class="zoom-slider" min="100" max="300" value="100" step="1">
+                        <button id="resetPosition" class="reset-btn">Reset Position</button>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="mount-header">
+                            <span class="mount-label">METAL MOUNT:</span>
+                            <span class="mount-selected-name" id="mountSelectedName">No Mount</span>
+                            <span class="mount-selected-price" id="mountSelectedPrice"></span>
+                        </div>
+                        <div class="mount-grid-cards" id="mountGrid">
+                            <!-- Mount options will be populated dynamically -->
                         </div>
                     </div>
 
-                    <div class="control-group price-display-group">
-                        <label>Total Price:</label>
-                        <div class="price-display">
-                            <span class="price-breakdown">
-                                Frame: <span id="framePriceDisplay">$0.00</span><br>
-                                Mount: <span id="mountPriceDisplay">$0.00</span>
-                            </span>
-                            <span class="total-price" id="totalPriceDisplay">$0.00</span>
-                        </div>
-                    </div>
-
-                    <div class="control-group">
-                        <label>Orientation:</label>
-                        <div class="orientation-controls">
-                            <button id="portraitBtn" class="orientation-btn active">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="7" y="2" width="10" height="20" rx="2"></rect>
-                                </svg>
-                                <span>Portrait</span>
-                            </button>
-                            <button id="landscapeBtn" class="orientation-btn">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <rect x="2" y="7" width="20" height="10" rx="2"></rect>
-                                </svg>
-                                <span>Landscape</span>
-                            </button>
-                        </div>
-                        <small class="orientation-hint" id="orientationHint"></small>
-                    </div>
-
-
-                    <div class="control-group">
-                        <label for="zoomSlider">Zoom: <span id="zoomValue">100</span>%</label>
-                        <input type="range" id="zoomSlider" min="100" max="300" value="100" step="1">
-                    </div>
-
-                    <div class="control-group">
-                        <label>Position:</label>
-                        <div class="position-controls">
-                            <button id="resetPosition" class="btn-secondary">Reset Position</button>
-                        </div>
-                    </div>
-
-                    <div class="action-buttons">
-                        <button id="addToCartBtn" class="btn-primary">Add to Cart</button>
-                        <button id="uploadNewBtn" class="btn-secondary">Upload New Photo</button>
-                    </div>
-                    
-                    <!-- Cart Icon -->
-                    <div class="cart-icon-container">
-                        <a href="cart.html" class="cart-icon-link">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="9" cy="21" r="1"></circle>
-                                <circle cx="20" cy="21" r="1"></circle>
-                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                            </svg>
-                            <span class="cart-badge" id="cartBadge">0</span>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="preview-container">
-                    <div class="frame-wrapper" id="frameWrapper">
-                        <div class="frame" id="frame">
-                            <div class="canvas-container" id="canvasContainer">
-                                <canvas id="photoCanvas"></canvas>
-                                <canvas id="cropOverlay"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="preview-note">Drag the photo to reposition • Use zoom slider to resize • Darker areas will be cropped</p>
+                    <button id="uploadNewBtn" class="upload-new-btn">Upload New Photo</button>
                 </div>
             </div>
         </div>
