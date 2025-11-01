@@ -352,7 +352,7 @@ body {
 }
 
 .option-image.wall-mount::before {
-    content: '🖼️';
+    content: '';
     position: absolute;
     top: 50%;
     left: 50%;
@@ -361,7 +361,7 @@ body {
 }
 
 .option-image.tabletop::before {
-    content: '📐';
+    content: '';
     position: absolute;
     top: 50%;
     left: 50%;
@@ -370,7 +370,7 @@ body {
 }
 
 .option-image.premium-mount::before {
-    content: '⭐';
+    content: '';
     position: absolute;
     top: 50%;
     left: 50%;

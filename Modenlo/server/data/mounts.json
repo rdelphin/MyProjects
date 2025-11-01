@@ -33,14 +33,14 @@
       "name": "Black Wood Mount",
       "description": "Elegant black stained wood mount",
       "price": 30,
-      "available": true
+      "available": false
     },
     {
       "id": "acrylic-clear",
       "name": "Clear Acrylic Mount",
       "description": "Modern clear acrylic floating mount",
       "price": 40,
-      "available": true
+      "available": false
     },
     {
       "id": "easel",
@@ -49,6 +49,14 @@
       "price": 15,
       "available": true,
       "thumbnail": "/uploads/mounts/mount-1761746402445-730689782.JPEG"
+    },
+    {
+      "id": "bamboo",
+      "name": "Bamboo",
+      "description": "Bamboo Mount",
+      "price": 15,
+      "available": true,
+      "thumbnail": "/uploads/mounts/mount-1762004341428-912683449.jpg"
     }
   ]
 }

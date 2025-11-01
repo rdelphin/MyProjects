@@ -175,8 +175,13 @@ function setupCreatePrintButton() {
     
     if (createBtn) {
         createBtn.addEventListener('click', function() {
+            // Determine display type from page URL or title
+            const pageTitle = document.querySelector('.product-title');
+            const displayType = pageTitle && pageTitle.textContent.includes('TABLETOP') ? 'tabletop' : 'wall';
+            
             // Store the selected options in sessionStorage to pass to framer.html
             const productOptions = {
+                displayType: displayType,
                 size: productState.selectedSize,
                 finish: productState.selectedFinish,
                 hardware: productState.selectedHardware,

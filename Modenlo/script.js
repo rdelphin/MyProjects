@@ -67,9 +67,25 @@ async function loadFrames() {
         const data = await response.json();
         
         if (data.success && data.frames.length > 0) {
+            // Check if coming from tabletop displays
+            const productOptions = sessionStorage.getItem('productPageOptions');
+            const displayType = productOptions ? JSON.parse(productOptions).displayType : null;
+            
+            // Filter frames for tabletop (11x14 and smaller)
+            let framesToShow = data.frames;
+            if (displayType === 'tabletop') {
+                framesToShow = data.frames.filter(frame => {
+                    // Parse dimensions and check if both are ≤ 14
+                    const parts = frame.id.split('x');
+                    const width = parseInt(parts[0]);
+                    const height = parseInt(parts[1]);
+                    return width <= 11 && height <= 14;
+                });
+            }
+            
             // Build FRAME_SIZES object from API data
             FRAME_SIZES = {};
-            data.frames.forEach(frame => {
+            framesToShow.forEach(frame => {
                 FRAME_SIZES[frame.id] = {
                     width: frame.width,
                     height: frame.height,
@@ -78,11 +94,11 @@ async function loadFrames() {
             });
             
             // Populate frame size dropdown
-            populateFrameDropdown(data.frames);
+            populateFrameDropdown(framesToShow);
             
             // Set default frame size if current one doesn't exist
-            if (!FRAME_SIZES[state.frameSize] && data.frames.length > 0) {
-                state.frameSize = data.frames[0].id;
+            if (!FRAME_SIZES[state.frameSize] && framesToShow.length > 0) {
+                state.frameSize = framesToShow[0].id;
             }
             
             // Update price display
@@ -186,9 +202,31 @@ async function loadMounts() {
         const data = await response.json();
         
         if (data.success && data.mounts.length > 0) {
-            // Build MOUNT_OPTIONS object from API data
+            // Check if coming from product pages
+            const productOptions = sessionStorage.getItem('productPageOptions');
+            const displayType = productOptions ? JSON.parse(productOptions).displayType : null;
+            
+            // Filter mounts based on display type
+            let mountsToShow = data.mounts;
+            
+            if (displayType === 'tabletop') {
+                // Tabletop: Only show No Mount, Easel, Bamboo
+                const tabletopMountIds = ['no-mount', 'easel', 'bamboo'];
+                mountsToShow = data.mounts.filter(mount => 
+                    tabletopMountIds.includes(mount.id.toLowerCase())
+                );
+            } else if (displayType === 'wall') {
+                // Wall: Exclude Easel and Bamboo (tabletop-only mounts)
+                const excludedMountIds = ['easel', 'bamboo'];
+                mountsToShow = data.mounts.filter(mount => 
+                    !excludedMountIds.includes(mount.id.toLowerCase())
+                );
+            }
+            // If displayType is null (direct access to framer), show all mounts
+            
+            // Build MOUNT_OPTIONS object from filtered mounts
             MOUNT_OPTIONS = {};
-            data.mounts.forEach(mount => {
+            mountsToShow.forEach(mount => {
                 MOUNT_OPTIONS[mount.id] = {
                     name: mount.name,
                     description: mount.description,
@@ -197,11 +235,11 @@ async function loadMounts() {
             });
             
             // Populate mount grid
-            populateMountGrid(data.mounts);
+            populateMountGrid(mountsToShow);
             
             // Set default mount if current one doesn't exist
-            if (!MOUNT_OPTIONS[state.selectedMount] && data.mounts.length > 0) {
-                state.selectedMount = data.mounts[0].id;
+            if (!MOUNT_OPTIONS[state.selectedMount] && mountsToShow.length > 0) {
+                state.selectedMount = mountsToShow[0].id;
             }
             
             // Update price display
