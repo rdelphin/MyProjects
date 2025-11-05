@@ -45,45 +45,55 @@
                         your images and artwork are infused into the print, taking on rich color vibrancy, 
                         <span class="text-highlight">brilliant luminescence</span>, and durability that is unparalleled.
                     </p>
-                    
-                    <div class="product-config-line">
-                        <span id="productConfigLine">5x7" - Premium Frame w/ High Gloss print surface, Premium Easel Stand</span>
+
+                    <div class="cta-section">
+                        <a href="framer.html" class="btn-primary-large">Create Your Print</a>
                     </div>
 
-                    <div class="cta-price-section">
-                        <button class="btn-create-print-hero" id="createPrintBtn">
-                            Create Your Print
-                        </button>
-                        <div class="product-price-hero" id="productPrice">$18.99</div>
-                    </div>
-
-                    <div class="config-sections">
-                        <div class="config-section">
-                            <h3>SIZES</h3>
-                            <p>5 desk-friendly sizes, from 4x6" to 12x16"</p>
+                    <!-- Available Sizes Section in Hero -->
+                    <div class="hero-sizes-section">
+                        <h3 class="hero-sizes-title">Available Sizes</h3>
+                        <div class="hero-sizes-grid" id="heroSizesGrid">
+                            <div class="loading">Loading sizes...</div>
                         </div>
-                        <div class="config-section">
-                            <h3>PRINT SURFACE</h3>
-                            <p>4 Print Surfaces to Choose From</p>
-                        </div>
-                        <div class="config-section">
-                            <h3>STAND OPTIONS</h3>
-                            <p>Standard Easel, Premium Stand, Dual Purpose (Stand + Wall Hardware)</p>
-                        </div>
-                        <div class="config-section">
-                            <h3>ORIENTATION</h3>
-                            <p>Easily switch between portrait and landscape</p>
-                        </div>
+                        <p class="hero-sizes-note">All sizes shown in inches. Custom sizes available upon request.</p>
                     </div>
                 </div>
 
-                <!-- Product Image - Right Side -->
+                <!-- Product Image Carousel - Right Side -->
                 <div class="product-image-section">
-                    <div class="product-showcase-image">
-                        <!-- Placeholder for product showcase -->
-                        <div class="showcase-placeholder tabletop">
-                            <img src="images/products/wall-display-hero.jpg" alt="Wall Display Product">
-                            <div class="showcase-frame-tabletop"></div>
+                    <div class="product-carousel">
+                        <div class="carousel-container">
+                            <div class="carousel-slides">
+                                <div class="carousel-slide active">
+                                    <img src="images/products/wall-display-hero.jpg" alt="Tabletop Display Product 1">
+                                </div>
+                                <div class="carousel-slide">
+                                    <img src="images/wall-display.jpg" alt="Tabletop Display Product 2">
+                                </div>
+                                <div class="carousel-slide">
+                                    <img src="images/wall-display01.jpg" alt="Tabletop Display Product 3">
+                                </div>
+                            </div>
+                            
+                            <!-- Carousel Navigation -->
+                            <button class="carousel-btn carousel-prev" aria-label="Previous image">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M15 18l-6-6 6-6"/>
+                                </svg>
+                            </button>
+                            <button class="carousel-btn carousel-next" aria-label="Next image">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                            </button>
+                            
+                            <!-- Carousel Indicators -->
+                            <div class="carousel-indicators">
+                                <button class="indicator active" data-slide="0" aria-label="Go to image 1"></button>
+                                <button class="indicator" data-slide="1" aria-label="Go to image 2"></button>
+                                <button class="indicator" data-slide="2" aria-label="Go to image 3"></button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -91,30 +101,54 @@
         </div>
     </section>
 
-    <!-- Why Choose Section -->
-    <section class="why-choose-section">
-        <div class="why-choose-container">
-            <h2 class="why-choose-title">Why Choose Modenlo</h2>
-            
-            <div class="why-choose-grid">
-                <div class="why-card">
-                    <div class="why-card-image handcrafted-image"></div>
-                    <h3 class="why-card-title">Handcrafted Quality</h3>
-                    <p class="why-card-text">Every single frame is carefully crafted, inspected, and packaged by our skilled artisans. Family-owned since 2020, we're proud to deliver premium quality that preserves your memories for generations.</p>
-                </div>
-                
-                <div class="why-card">
-                    <div class="why-card-image printing-image"></div>
-                    <h3 class="why-card-title">Premium Print Process</h3>
-                    <p class="why-card-text">Our professional printing process employs advanced technology with modern high-resolution print systems to achieve ultra-detailed color reproduction and enhanced image quality for stunning results.</p>
-                </div>
-                
-                <div class="why-card">
-                    <div class="why-card-image archival-image"></div>
-                    <h3 class="why-card-title">Archival Quality</h3>
-                    <p class="why-card-text">Modenlo prints are certified archival quality with UV-resistant glass, maintaining their color and clarity for up to 100 years in home display and 300 years in dark storage. Perfect for fine art and cherished memories.</p>
-                </div>
+    <!-- Stand Options Section -->
+    <section class="feature-section feature-section-alt">
+        <div class="feature-container">
+            <div class="feature-image-wrapper">
+                <img src="images/wall-display.jpg" alt="Stand Options" class="feature-image">
             </div>
+            <div class="feature-content">
+                <span class="feature-badge">Stand Options</span>
+                <h2 class="feature-heading">Perfect display solutions for any space.</h2>
+                <p class="feature-text">Choose from our selection of professional stand options designed to showcase your tabletop prints beautifully. From classic easel stands to premium dual-purpose mounts, we offer display solutions that complement any decor style.</p>
+                <p class="feature-text">Each stand is carefully crafted to ensure your print is displayed securely and elegantly. Whether you prefer a traditional easel look or a versatile stand that doubles as wall mount, our hardware is built to last and easy to set up.</p>
+                <a href="price-list.html" class="feature-link">
+                    View all options
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Print Quality Section -->
+    <section class="feature-section">
+        <div class="feature-container">
+            <div class="feature-content">
+                <span class="feature-badge">Print Quality</span>
+                <h2 class="feature-heading">Museum-quality prints that last a lifetime.</h2>
+                <p class="feature-text">Our tabletop displays feature premium print surfaces with vibrant color reproduction and exceptional detail. Each print is carefully crafted using archival-quality materials to ensure your memories remain vivid for generations.</p>
+                <p class="feature-text">Choose from multiple finish options including High Gloss, Soft Gloss, Matte, and Pearl to perfectly match your style. All prints come with UV-resistant protection and are rated for 100+ years of display life in normal conditions.</p>
+                <a href="#" class="feature-link">
+                    Learn more
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="feature-image-wrapper">
+                <img src="images/wall-display01.jpg" alt="Print Quality" class="feature-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+        <div class="cta-container">
+            <h2>Ready to Display Your Memories?</h2>
+            <p>Create your custom tabletop display in minutes</p>
+            <a href="framer.html" class="btn-primary-large">Get Started Now</a>
         </div>
     </section>
 
@@ -163,7 +197,112 @@
         </div>
     </footer>
 
-    <script src="landing-script.js"></script>
-    <script src="product-page-script.js"></script>
+    <script src="cart-count-updater.js"></script>
+    <script>
+        // Load available sizes
+        async function loadSizes() {
+            try {
+                const response = await fetch('http://localhost:3000/api/frames');
+                const data = await response.json();
+                const frames = data.frames || data;
+                
+                const heroSizesGrid = document.getElementById('heroSizesGrid');
+                
+                if (frames && frames.length > 0) {
+                    frames.sort((a, b) => a.price - b.price);
+                    
+                    // Show only first 6 sizes in hero
+                    const displayFrames = frames.slice(0, 6);
+                    
+                    heroSizesGrid.innerHTML = displayFrames.map(frame => `
+                        <div class="hero-size-card">
+                            <div class="hero-size-dimension">${frame.size}"</div>
+                            <div class="hero-size-price">$${frame.price.toFixed(2)}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    heroSizesGrid.innerHTML = '<p class="loading">No sizes available</p>';
+                }
+            } catch (error) {
+                console.error('Error loading sizes:', error);
+                document.getElementById('heroSizesGrid').innerHTML = '<p class="loading">Unable to load sizes</p>';
+            }
+        }
+        
+        // Image Carousel
+        class Carousel {
+            constructor() {
+                this.currentSlide = 0;
+                this.slides = document.querySelectorAll('.carousel-slide');
+                this.indicators = document.querySelectorAll('.indicator');
+                this.prevBtn = document.querySelector('.carousel-prev');
+                this.nextBtn = document.querySelector('.carousel-next');
+                
+                this.init();
+            }
+            
+            init() {
+                // Button event listeners
+                this.prevBtn.addEventListener('click', () => this.prevSlide());
+                this.nextBtn.addEventListener('click', () => this.nextSlide());
+                
+                // Indicator event listeners
+                this.indicators.forEach((indicator, index) => {
+                    indicator.addEventListener('click', () => this.goToSlide(index));
+                });
+                
+                // Touch/swipe support
+                let touchStartX = 0;
+                let touchEndX = 0;
+                const carousel = document.querySelector('.carousel-container');
+                
+                carousel.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                });
+                
+                carousel.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    this.handleSwipe();
+                });
+                
+                this.handleSwipe = () => {
+                    if (touchStartX - touchEndX > 50) {
+                        this.nextSlide();
+                    }
+                    if (touchEndX - touchStartX > 50) {
+                        this.prevSlide();
+                    }
+                };
+                
+                // Auto-play (optional - every 5 seconds)
+                setInterval(() => this.nextSlide(), 5000);
+            }
+            
+            goToSlide(index) {
+                this.slides[this.currentSlide].classList.remove('active');
+                this.indicators[this.currentSlide].classList.remove('active');
+                
+                this.currentSlide = index;
+                
+                this.slides[this.currentSlide].classList.add('active');
+                this.indicators[this.currentSlide].classList.add('active');
+            }
+            
+            nextSlide() {
+                let next = (this.currentSlide + 1) % this.slides.length;
+                this.goToSlide(next);
+            }
+            
+            prevSlide() {
+                let prev = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+                this.goToSlide(prev);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSizes();
+            new Carousel();
+        });
+    </script>
 </body>
 </html>

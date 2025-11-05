@@ -51,14 +51,51 @@
                     <div class="cta-section">
                         <a href="framer.html" class="btn-primary-large">Create Your Print</a>
                     </div>
+
+                    <!-- Available Sizes Section in Hero -->
+                    <div class="hero-sizes-section">
+                        <h3 class="hero-sizes-title">Available Sizes</h3>
+                        <div class="hero-sizes-grid" id="heroSizesGrid">
+                            <div class="loading">Loading sizes...</div>
+                        </div>
+                        <p class="hero-sizes-note">All sizes shown in inches. Custom sizes available upon request.</p>
+                    </div>
                 </div>
 
-                <!-- Product Image - Right Side -->
+                <!-- Product Image Carousel - Right Side -->
                 <div class="product-image-section">
-                    <div class="product-showcase-image">
-                        <div class="showcase-placeholder">
-                            <img src="images/products/wall-display-hero.jpg" alt="Wall Display Product">
-                            <div class="showcase-frame"></div>
+                    <div class="product-carousel">
+                        <div class="carousel-container">
+                            <div class="carousel-slides">
+                                <div class="carousel-slide active">
+                                    <img src="images/products/wall-display-hero.jpg" alt="Wall Display Product 1">
+                                </div>
+                                <div class="carousel-slide">
+                                    <img src="images/wall-display.jpg" alt="Wall Display Product 2">
+                                </div>
+                                <div class="carousel-slide">
+                                    <img src="images/wall-display01.jpg" alt="Wall Display Product 3">
+                                </div>
+                            </div>
+                            
+                            <!-- Carousel Navigation -->
+                            <button class="carousel-btn carousel-prev" aria-label="Previous image">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M15 18l-6-6 6-6"/>
+                                </svg>
+                            </button>
+                            <button class="carousel-btn carousel-next" aria-label="Next image">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                            </button>
+                            
+                            <!-- Carousel Indicators -->
+                            <div class="carousel-indicators">
+                                <button class="indicator active" data-slide="0" aria-label="Go to image 1"></button>
+                                <button class="indicator" data-slide="1" aria-label="Go to image 2"></button>
+                                <button class="indicator" data-slide="2" aria-label="Go to image 3"></button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -66,19 +103,6 @@
         </div>
     </section>
 
-    <!-- Available Sizes Section -->
-    <section class="sizes-section">
-        <div class="section-container">
-            <h2 class="section-title">Available Sizes</h2>
-            <p class="section-subtitle">Choose from our curated selection of popular sizes</p>
-            
-            <div class="sizes-grid" id="sizesGrid">
-                <div class="loading">Loading available sizes...</div>
-            </div>
-            
-            <p class="sizes-note">All sizes shown in inches. Custom sizes available upon request.</p>
-        </div>
-    </section>
 
     <!-- Mount Options Section -->
     <section class="feature-section feature-section-alt">
@@ -185,28 +209,103 @@
                 const data = await response.json();
                 const frames = data.frames || data;
                 
-                const sizesGrid = document.getElementById('sizesGrid');
+                const heroSizesGrid = document.getElementById('heroSizesGrid');
                 
                 if (frames && frames.length > 0) {
                     frames.sort((a, b) => a.price - b.price);
                     
-                    sizesGrid.innerHTML = frames.map(frame => `
-                        <div class="size-card">
-                            <div class="size-dimension">${frame.size}"</div>
-                            <div class="size-price">$${frame.price.toFixed(2)}</div>
-                            <div class="size-pixels">${frame.width} x ${frame.height}px</div>
+                    // Show only first 6 sizes in hero
+                    const displayFrames = frames.slice(0, 6);
+                    
+                    heroSizesGrid.innerHTML = displayFrames.map(frame => `
+                        <div class="hero-size-card">
+                            <div class="hero-size-dimension">${frame.size}"</div>
+                            <div class="hero-size-price">$${frame.price.toFixed(2)}</div>
                         </div>
                     `).join('');
                 } else {
-                    sizesGrid.innerHTML = '<p class="loading">No sizes available</p>';
+                    heroSizesGrid.innerHTML = '<p class="loading">No sizes available</p>';
                 }
             } catch (error) {
                 console.error('Error loading sizes:', error);
-                document.getElementById('sizesGrid').innerHTML = '<p class="loading">Unable to load sizes</p>';
+                document.getElementById('heroSizesGrid').innerHTML = '<p class="loading">Unable to load sizes</p>';
             }
         }
         
-        document.addEventListener('DOMContentLoaded', loadSizes);
+        // Image Carousel
+        class Carousel {
+            constructor() {
+                this.currentSlide = 0;
+                this.slides = document.querySelectorAll('.carousel-slide');
+                this.indicators = document.querySelectorAll('.indicator');
+                this.prevBtn = document.querySelector('.carousel-prev');
+                this.nextBtn = document.querySelector('.carousel-next');
+                
+                this.init();
+            }
+            
+            init() {
+                // Button event listeners
+                this.prevBtn.addEventListener('click', () => this.prevSlide());
+                this.nextBtn.addEventListener('click', () => this.nextSlide());
+                
+                // Indicator event listeners
+                this.indicators.forEach((indicator, index) => {
+                    indicator.addEventListener('click', () => this.goToSlide(index));
+                });
+                
+                // Touch/swipe support
+                let touchStartX = 0;
+                let touchEndX = 0;
+                const carousel = document.querySelector('.carousel-container');
+                
+                carousel.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                });
+                
+                carousel.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    this.handleSwipe();
+                });
+                
+                this.handleSwipe = () => {
+                    if (touchStartX - touchEndX > 50) {
+                        this.nextSlide();
+                    }
+                    if (touchEndX - touchStartX > 50) {
+                        this.prevSlide();
+                    }
+                };
+                
+                // Auto-play (optional - every 5 seconds)
+                setInterval(() => this.nextSlide(), 5000);
+            }
+            
+            goToSlide(index) {
+                this.slides[this.currentSlide].classList.remove('active');
+                this.indicators[this.currentSlide].classList.remove('active');
+                
+                this.currentSlide = index;
+                
+                this.slides[this.currentSlide].classList.add('active');
+                this.indicators[this.currentSlide].classList.add('active');
+            }
+            
+            nextSlide() {
+                let next = (this.currentSlide + 1) % this.slides.length;
+                this.goToSlide(next);
+            }
+            
+            prevSlide() {
+                let prev = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+                this.goToSlide(prev);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSizes();
+            new Carousel();
+        });
     </script>
 </body>
 </html>
