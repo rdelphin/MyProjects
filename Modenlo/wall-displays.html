@@ -20,6 +20,8 @@
                 <a href="index.html#how-it-works">How It Works</a>
                 <a href="index.html#options">Display Options</a>
                 <a href="index.html#categories">Shop</a>
+                <a href="about-us.html">About Us</a>
+                <a href="price-list.html">Pricing</a>
                 <a href="cart.html" class="cart-link">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="9" cy="21" r="1"></circle>
@@ -45,45 +47,17 @@
                         Your images and artwork are infused into the print, taking on rich color vibrancy, 
                         <span class="text-highlight">brilliant luminescence</span>, and durability that is unparalleled.
                     </p>
-                    
-                    <div class="product-config-line">
-                        <span id="productConfigLine">16x24" - MetalPrint w/ High Gloss print surface, 1/8" Rounded Corners, Float Mount Hanger hanging system</span>
-                    </div>
 
-                    <div class="cta-price-section">
-                        <button class="btn-create-print-hero" id="createPrintBtn">
-                            Create Your Print
-                        </button>
-                        <div class="product-price-hero" id="productPrice">$24.99</div>
-                    </div>
-
-                    <div class="config-sections">
-                        <div class="config-section">
-                            <h3>SIZES</h3>
-                            <p>61 choices, from 4x4" to 48x96"</p>
-                        </div>
-                        <div class="config-section">
-                            <h3>PRINT SURFACE</h3>
-                            <p>9 Print Surfaces to Choose From</p>
-                        </div>
-                        <div class="config-section">
-                            <h3>CORNERS</h3>
-                            <p>Sharp Square, 1/8" Rounded Corners, 3/16" Rounded Corners, Scalloped Corners</p>
-                        </div>
-                        <div class="config-section">
-                            <h3>HANGING OPTIONS</h3>
-                            <p>6 Hanging Options Available</p>
-                        </div>
+                    <div class="cta-section">
+                        <a href="framer.html" class="btn-primary-large">Create Your Print</a>
                     </div>
                 </div>
 
                 <!-- Product Image - Right Side -->
                 <div class="product-image-section">
                     <div class="product-showcase-image">
-                        <!-- Placeholder for product showcase -->
-						
                         <div class="showcase-placeholder">
-						<img src="images/products/wall-display-hero.jpg" alt="Wall Display Product">
+                            <img src="images/products/wall-display-hero.jpg" alt="Wall Display Product">
                             <div class="showcase-frame"></div>
                         </div>
                     </div>
@@ -92,30 +66,68 @@
         </div>
     </section>
 
-    <!-- Why Choose Section -->
-    <section class="why-choose-section">
-        <div class="why-choose-container">
-            <h2 class="why-choose-title">Why Choose Modenlo</h2>
+    <!-- Available Sizes Section -->
+    <section class="sizes-section">
+        <div class="section-container">
+            <h2 class="section-title">Available Sizes</h2>
+            <p class="section-subtitle">Choose from our curated selection of popular sizes</p>
             
-            <div class="why-choose-grid">
-                <div class="why-card">
-                    <div class="why-card-image handcrafted-image"></div>
-                    <h3 class="why-card-title">Handcrafted Quality</h3>
-                    <p class="why-card-text">Every single frame is carefully crafted, inspected, and packaged by our skilled artisans. Family-owned since 2020, we're proud to deliver premium quality that preserves your memories for generations.</p>
-                </div>
-                
-                <div class="why-card">
-                    <div class="why-card-image printing-image"></div>
-                    <h3 class="why-card-title">Premium Print Process</h3>
-                    <p class="why-card-text">Our professional printing process employs advanced technology with modern high-resolution print systems to achieve ultra-detailed color reproduction and enhanced image quality for stunning results.</p>
-                </div>
-                
-                <div class="why-card">
-                    <div class="why-card-image archival-image"></div>
-                    <h3 class="why-card-title">Archival Quality</h3>
-                    <p class="why-card-text">Modenlo prints are certified archival quality with UV-resistant glass, maintaining their color and clarity for up to 100 years in home display and 300 years in dark storage. Perfect for fine art and cherished memories.</p>
-                </div>
+            <div class="sizes-grid" id="sizesGrid">
+                <div class="loading">Loading available sizes...</div>
             </div>
+            
+            <p class="sizes-note">All sizes shown in inches. Custom sizes available upon request.</p>
+        </div>
+    </section>
+
+    <!-- Mount Options Section -->
+    <section class="feature-section feature-section-alt">
+        <div class="feature-container">
+            <div class="feature-image-wrapper">
+                <img src="images/wall-display.jpg" alt="Mount Options" class="feature-image">
+            </div>
+            <div class="feature-content">
+                <span class="feature-badge">Mount Options</span>
+                <h2 class="feature-heading">Premium mounting solutions for every space.</h2>
+                <p class="feature-text">Choose from our selection of professional mounting options designed to showcase your metal prints beautifully. From sleek aluminum frames to eco-friendly bamboo, we offer mounting solutions that complement any decor style.</p>
+                <p class="feature-text">Each mount is carefully crafted to ensure your print is displayed securely and elegantly. Whether you prefer a minimalist floating effect or a classic framed look, our mounting hardware is built to last and easy to install.</p>
+                <a href="price-list.html" class="feature-link">
+                    View all options
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Shipping & Handling Section -->
+    <section class="feature-section">
+        <div class="feature-container">
+            <div class="feature-content">
+                <span class="feature-badge">Shipping & Handling</span>
+                <h2 class="feature-heading">Fast, secure delivery you can count on.</h2>
+                <p class="feature-text">Have your orders carefully packaged and shipped with care, no matter the size. Each print is protected with premium packaging materials and corner guards to ensure it arrives in perfect condition.</p>
+                <p class="feature-text">Orders are processed within 3-5 business days and shipped via reliable carriers with full tracking. Enjoy free standard shipping on orders over $50, with expedited options available. We stand behind every order with our 30-day satisfaction guarantee.</p>
+                <a href="#" class="feature-link">
+                    Learn more
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="feature-image-wrapper">
+                <img src="images/wall-display.jpg" alt="Shipping" class="feature-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+        <div class="cta-container">
+            <h2>Ready to Transform Your Photos?</h2>
+            <p>Create your custom wall display in minutes</p>
+            <a href="framer.html" class="btn-primary-large">Get Started Now</a>
         </div>
     </section>
 
@@ -125,14 +137,14 @@
             <div class="footer-grid">
                 <div class="footer-col">
                     <h4>Modenlo</h4>
-                    <p>Premium framed prints that bring your memories to life.</p>
+                    <p>Premium metal prints that bring your memories to life.</p>
                 </div>
                 
                 <div class="footer-col">
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="index.html">Home</a></li>
-                        <li><a href="framer.html">Create Frame</a></li>
+                        <li><a href="framer.html">Create Print</a></li>
                         <li><a href="wall-displays.html">Wall Displays</a></li>
                         <li><a href="tabletop-displays.html">Tabletop Displays</a></li>
                     </ul>
@@ -164,7 +176,37 @@
         </div>
     </footer>
 
-    <script src="landing-script.js"></script>
-    <script src="product-page-script.js"></script>
+    <script src="cart-count-updater.js"></script>
+    <script>
+        // Load available sizes
+        async function loadSizes() {
+            try {
+                const response = await fetch('http://localhost:3000/api/frames');
+                const data = await response.json();
+                const frames = data.frames || data;
+                
+                const sizesGrid = document.getElementById('sizesGrid');
+                
+                if (frames && frames.length > 0) {
+                    frames.sort((a, b) => a.price - b.price);
+                    
+                    sizesGrid.innerHTML = frames.map(frame => `
+                        <div class="size-card">
+                            <div class="size-dimension">${frame.size}"</div>
+                            <div class="size-price">$${frame.price.toFixed(2)}</div>
+                            <div class="size-pixels">${frame.width} x ${frame.height}px</div>
+                        </div>
+                    `).join('');
+                } else {
+                    sizesGrid.innerHTML = '<p class="loading">No sizes available</p>';
+                }
+            } catch (error) {
+                console.error('Error loading sizes:', error);
+                document.getElementById('sizesGrid').innerHTML = '<p class="loading">Unable to load sizes</p>';
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', loadSizes);
+    </script>
 </body>
 </html>

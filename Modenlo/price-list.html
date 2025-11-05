@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Price List - Modenlo</title>
+    <link rel="stylesheet" href="landing-style.css">
+    <style>
+        .price-list-hero {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 8rem 2rem 6rem;
+            margin-top: 80px;
+            text-align: center;
+        }
+        
+        .price-section {
+            background: white;
+            padding: 4rem 0;
+        }
+        
+        .price-intro {
+            max-width: 800px;
+            margin: 0 auto 3rem;
+            text-align: center;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+        
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .price-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .price-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+            border-color: var(--primary-color);
+        }
+        
+        .size-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .price-amount {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+        }
+        
+        .price-amount sup {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .dimensions {
+            color: var(--text-light);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .features-list {
+            list-style: none;
+            padding: 0;
+            margin: 1.5rem 0;
+            text-align: left;
+        }
+        
+        .features-list li {
+            padding: 0.5rem 0;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .features-list li::before {
+            content: '✓';
+            color: var(--primary-color);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .order-btn {
+            display: inline-block;
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+        
+        .order-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: var(--text-light);
+        }
+        
+        .pricing-note {
+            background: var(--background-light);
+            padding: 3rem 2rem;
+            margin-top: 4rem;
+            border-radius: 15px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .pricing-note h3 {
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .pricing-note ul {
+            color: var(--text-light);
+            line-height: 1.8;
+            margin-left: 1.5rem;
+        }
+        
+        .pricing-note ul li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="logo/logo_noSlogan.png" alt="Modenlo" class="logo-image">
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="index.html#how-it-works">How It Works</a>
+                <a href="index.html#options">Display Options</a>
+                <a href="index.html#categories">Shop</a>
+                <a href="about-us.html">About Us</a>
+                <a href="price-list.html" class="active">Pricing</a>
+                <a href="cart.html" class="cart-link">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-count" id="cartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="price-list-hero">
+        <div class="section-container">
+            <h1 class="page-title">Pricing</h1>
+            <p class="page-subtitle">Simple, transparent pricing for premium metal prints</p>
+        </div>
+    </section>
+
+    <!-- Price List Section -->
+    <section class="price-section">
+        <div class="section-container">
+            <p class="price-intro">
+                Choose from our selection of premium metal print sizes. All prices include high-definition printing on aluminum, 
+                your choice of mounting option, and secure packaging. Free shipping on orders over $50.
+            </p>
+            
+            <div id="priceGrid" class="price-grid">
+                <div class="loading">Loading pricing information...</div>
+            </div>
+            
+            <div class="pricing-note">
+                <h3>What's Included</h3>
+                <ul>
+                    <li>High-definition metal print on premium aluminum</li>
+                    <li>Choice of brushed or white-coated finish</li>
+                    <li>Your choice of mounting option (wall mount or tabletop stand)</li>
+                    <li>Fade, moisture, and scratch-resistant coating</li>
+                    <li>Secure protective packaging</li>
+                    <li>Free shipping on orders over $50</li>
+                    <li>100% satisfaction guarantee</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="final-cta">
+        <div class="cta-container">
+            <h2>Ready to Create Your Metal Print?</h2>
+            <p>Choose your size and start designing now</p>
+            <a href="framer.html" class="btn-primary-large">Get Started</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>Modenlo</h4>
+                    <p>Premium metal prints that bring your memories to life.</p>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="framer.html">Create Print</a></li>
+                        <li><a href="about-us.html">About Us</a></li>
+                        <li><a href="price-list.html">Pricing</a></li>
+                        <li><a href="cart.html">Cart</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Shipping</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">Contact Us</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Follow Us</h4>
+                    <div class="social-links">
+                        <a href="#">Instagram</a>
+                        <a href="#">Facebook</a>
+                        <a href="#">Pinterest</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 Modenlo. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="cart-count-updater.js"></script>
+    <script>
+        // Load and display pricing
+        async function loadPricing() {
+            try {
+                const response = await fetch('http://localhost:3000/api/frames');
+                const data = await response.json();
+                
+                // Extract frames array from response
+                const frames = data.frames || data;
+                
+                const priceGrid = document.getElementById('priceGrid');
+                
+                if (frames && frames.length > 0) {
+                    // Sort by price
+                    frames.sort((a, b) => a.price - b.price);
+                    
+                    priceGrid.innerHTML = frames.map(frame => `
+                        <div class="price-card">
+                            <div class="size-badge">${frame.size}"</div>
+                            <div class="price-amount">
+                                <sup>$</sup>${frame.price.toFixed(2)}
+                            </div>
+                            <div class="dimensions">${frame.width} x ${frame.height} pixels</div>
+                            <ul class="features-list">
+                                <li>Premium aluminum surface</li>
+                                <li>High-definition printing</li>
+                                <li>Choice of mount included</li>
+                                <li>Ready to display</li>
+                            </ul>
+                            <a href="framer.html" class="order-btn">Order Now</a>
+                        </div>
+                    `).join('');
+                } else {
+                    priceGrid.innerHTML = '<p class="loading">No pricing information available.</p>';
+                }
+            } catch (error) {
+                console.error('Error loading pricing:', error);
+                document.getElementById('priceGrid').innerHTML = `
+                    <p class="loading">Unable to load pricing. Please try again later.</p>
+                `;
+            }
+        }
+        
+        // Load pricing when page loads
+        document.addEventListener('DOMContentLoaded', loadPricing);
+    </script>
+</body>
+</html>
