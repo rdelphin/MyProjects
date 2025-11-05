@@ -60,6 +60,12 @@ const resolutionWarning = document.getElementById('resolutionWarning');
 const warningMessage = document.getElementById('warningMessage');
 const closeWarningBtn = document.getElementById('closeWarning');
 
+// Get display type from URL parameter
+function getDisplayType() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('type'); // Returns 'wall', 'tabletop', or null
+}
+
 // Load frames from API
 async function loadFrames() {
     try {
@@ -67,15 +73,14 @@ async function loadFrames() {
         const data = await response.json();
         
         if (data.success && data.frames.length > 0) {
-            // Check if coming from tabletop displays
-            const productOptions = sessionStorage.getItem('productPageOptions');
-            const displayType = productOptions ? JSON.parse(productOptions).displayType : null;
+            // Get display type from URL parameter
+            const displayType = getDisplayType();
             
-            // Filter frames for tabletop (11x14 and smaller)
+            // Filter frames based on display type
             let framesToShow = data.frames;
             if (displayType === 'tabletop') {
+                // Tabletop: limit to 11×14 and smaller
                 framesToShow = data.frames.filter(frame => {
-                    // Parse dimensions and check if both are ≤ 14
                     const parts = frame.id.split('x');
                     const width = parseInt(parts[0]);
                     const height = parseInt(parts[1]);
@@ -202,9 +207,8 @@ async function loadMounts() {
         const data = await response.json();
         
         if (data.success && data.mounts.length > 0) {
-            // Check if coming from product pages
-            const productOptions = sessionStorage.getItem('productPageOptions');
-            const displayType = productOptions ? JSON.parse(productOptions).displayType : null;
+            // Get display type from URL parameter
+            const displayType = getDisplayType();
             
             // Filter mounts based on display type
             let mountsToShow = data.mounts;
