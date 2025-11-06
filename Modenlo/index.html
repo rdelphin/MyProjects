@@ -17,7 +17,7 @@
                 </a>
             </div>
             <div class="nav-links">
-                <a href="#how-it-works">How It Works</a>
+                <a href="how-it-works.html">How It Works</a>
                 <a href="#options">Display Options</a>
                 <a href="#categories">Shop</a>
                 <a href="about-us.html">About Us</a>
@@ -90,68 +90,134 @@
         </div>
     </section>
 
-    <!-- Display Options -->
-    <section class="display-options" id="options">
+    <!-- Shop Categories -->
+    <section class="categories-section" id="categories">
         <div class="section-container">
-            <h2 class="section-title">Display Your Way</h2>
-            <p class="section-subtitle">Versatile mounting options to match any space and style</p>
+            <h2 class="section-title">Shop by Category</h2>
+            <p class="section-subtitle">Choose your preferred display style</p>
             
-            <div class="options-grid-two">
-                <div class="option-card">
-                    <div class="option-image wall-mount"> 
-                        <img src="images/wall-display.jpg" alt="Beautiful framed photos" class="hero-image-large">
+            <div class="categories-new-grid">
+                <a href="wall-displays.html" class="category-new-card">
+                    <div class="category-new-content">
+                        <div class="category-new-text">
+                            <h2 class="category-new-title">Wall Displays</h2>
+                            <p class="category-new-description">Transform your favorite photos into stunning wall art with our premium framed displays. Your images are infused into the print, taking on rich color vibrancy and brilliant luminescence.</p>
+                            <p class="category-price">Starting from $15.99</p>
+                            <span class="category-new-cta">
+                                Shop Wall Displays
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="category-new-image">
+                            <img src="images/wall-display01.jpg" alt="Wall Displays" loading="lazy" />
+                        </div>
                     </div>
-                    <h3>Wall Mount</h3>
-                    <p>Classic hanging hardware included. Perfect for creating gallery walls or making a statement piece.</p>
-                </div>
+                </a>
                 
-                <div class="option-card">
-                    <div class="option-image tabletop">
-                        <img src="images/wall-display.jpg" alt="Beautiful framed photos" class="hero-image-large">
+                <a href="tabletop-displays.html" class="category-new-card">
+                    <div class="category-new-content">
+                        <div class="category-new-text">
+                            <h2 class="category-new-title">Tabletop Displays</h2>
+                            <p class="category-new-description">Perfect for desks, shelves, and mantles. Our elegant tabletop displays feature premium easel stands that allow you to showcase your memories anywhere. Easily switch between portrait and landscape orientations.</p>
+                            <p class="category-price">Starting from $15.99</p>
+                            <span class="category-new-cta">
+                                Shop Tabletop Displays
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="category-new-image">
+                            <img src="images/wall-display.jpg" alt="Tabletop Displays" loading="lazy" />
+                        </div>
                     </div>
-                    <h3>Tabletop Stand</h3>
-                    <p>Elegant stand included for desk, shelf, or mantle display. Switch between portrait and landscape.</p>
-                </div>
+                </a>
             </div>
         </div>
     </section>
 
-    <!-- Mount Options -->
+    <!-- Mount Options Slider -->
     <section class="mount-options-section">
         <div class="section-container">
             <h2 class="section-title">Mount Options</h2>
             <p class="section-subtitle">Choose the perfect mounting style for your metal print</p>
             
-            <div class="mount-options-grid">
-                <div class="mount-card">
-                    <div class="mount-image aluminum-frame">
-                        <img src="images/wall-display.jpg" alt="Aluminum Frame" class="mount-img">
+            <div class="mount-slider-container">
+                <button class="mount-slider-nav prev" aria-label="Previous mount option">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                </button>
+                
+                <div class="mount-slider-wrapper">
+                    <!-- Aluminum Frame Slide -->
+                    <div class="mount-slide active" data-mount="aluminum">
+                        <div class="mount-slide-image">
+                            <img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800" alt="Aluminum Frame Mount" class="mount-img">
+                        </div>
+                        <div class="mount-slide-content">
+                            <div class="mount-badge">WALL MOUNT</div>
+                            <h3>Aluminum Frame</h3>
+                            <p class="mount-description">Sleek and modern aluminum frame that adds a polished, gallery-quality finish to your metal print. Perfect for contemporary spaces.</p>
+                            <ul class="mount-features-list">
+                                <li>✓ Gallery-quality finish</li>
+                                <li>✓ Lightweight & durable</li>
+                                <li>✓ Easy wall mounting</li>
+                                <li>✓ Contemporary design</li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="mount-info">
-                        <h3>Aluminum Frame</h3>
-                        <p>Sleek and modern aluminum frame that adds a polished, gallery-quality finish to your metal print. Perfect for contemporary spaces.</p>
+                    
+                    <!-- Easel Stand Slide -->
+                    <div class="mount-slide" data-mount="easel">
+                        <div class="mount-slide-image">
+                            <img src="https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800" alt="Easel Stand Mount" class="mount-img">
+                        </div>
+                        <div class="mount-slide-content">
+                            <div class="mount-badge tabletop">TABLETOP</div>
+                            <h3>Easel</h3>
+                            <p class="mount-description">Versatile easel stand for tabletop display. Ideal for desks, shelves, and mantles. Switch between portrait and landscape orientations with ease.</p>
+                            <ul class="mount-features-list">
+                                <li>✓ Adjustable angle</li>
+                                <li>✓ Portrait & landscape</li>
+                                <li>✓ Freestanding design</li>
+                                <li>✓ Easy to reposition</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Bamboo Frame Slide -->
+                    <div class="mount-slide" data-mount="bamboo">
+                        <div class="mount-slide-image">
+                            <img src="https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=800" alt="Bamboo Frame Mount" class="mount-img">
+                        </div>
+                        <div class="mount-slide-content">
+                            <div class="mount-badge eco">ECO-FRIENDLY</div>
+                            <h3>Bamboo</h3>
+                            <p class="mount-description">Eco-friendly bamboo frame brings warmth and natural elegance to your print. Sustainably sourced and beautifully crafted for conscious consumers.</p>
+                            <ul class="mount-features-list">
+                                <li>✓ 100% sustainable bamboo</li>
+                                <li>✓ Natural warm finish</li>
+                                <li>✓ Lightweight & strong</li>
+                                <li>✓ Eco-conscious choice</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="mount-card">
-                    <div class="mount-image easel">
-                        <img src="images/wall-display.jpg" alt="Easel Stand" class="mount-img">
-                    </div>
-                    <div class="mount-info">
-                        <h3>Easel</h3>
-                        <p>Versatile easel stand for tabletop display. Ideal for desks, shelves, and mantles. Switch between portrait and landscape orientations with ease.</p>
-                    </div>
-                </div>
-                
-                <div class="mount-card">
-                    <div class="mount-image bamboo">
-                        <img src="images/wall-display.jpg" alt="Bamboo Frame" class="mount-img">
-                    </div>
-                    <div class="mount-info">
-                        <h3>Bamboo</h3>
-                        <p>Eco-friendly bamboo frame brings warmth and natural elegance to your print. Sustainably sourced and beautifully crafted.</p>
-                    </div>
-                </div>
+                <button class="mount-slider-nav next" aria-label="Next mount option">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="mount-slider-dots">
+                <span class="mount-dot active" data-index="0"></span>
+                <span class="mount-dot" data-index="1"></span>
+                <span class="mount-dot" data-index="2"></span>
             </div>
         </div>
     </section>
@@ -199,54 +265,6 @@
 
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Shop Categories -->
-    <section class="categories-section" id="categories">
-        <div class="section-container">
-            <h2 class="section-title">Shop by Category</h2>
-            <p class="section-subtitle">Choose your preferred display style</p>
-            
-            <div class="categories-grid-two">
-                <a href="wall-displays.html" class="category-card wall-display">
-                    <div class="category-badge">Popular Choice</div>
-                    <div class="category-image-new wall-displays">
-                        <img src="images/wall-display.jpg" alt="Beautiful framed photos" class="hero-image-large">
-                        
-                    </div>
-                    <div class="category-info">
-                        <h3>Wall Displays</h3>
-                        <p class="category-description">Classic hanging frames perfect for creating stunning gallery walls. Includes premium hanging hardware.</p>
-                        <ul class="category-features">
-                            <li>✓ All frame sizes available</li>
-                            <li>✓ Easy-mount hardware included</li>
-                            <li>✓ Portrait & landscape options</li>
-                        </ul>
-                        <span class="category-price">From $15.99</span>
-                        <span class="shop-now">Shop Wall Displays →</span>
-                    </div>
-                </a>
-                
-                <a href="tabletop-displays.html" class="category-card tabletop-display">
-                    <div class="category-badge">Versatile</div>
-                    <div class="category-image-new tabletop-displays">
-                        <img src="images/wall-display.jpg" alt="Beautiful framed photos" class="hero-image-large">
-                        
-                    </div>
-                    <div class="category-info">
-                        <h3>Tabletop Displays</h3>
-                        <p class="category-description">Elegant standing frames ideal for desks, shelves, and mantles. Easily switch orientation as needed.</p>
-                        <ul class="category-features">
-                            <li>✓ Premium easel stand included</li>
-                            <li>✓ Switch portrait/landscape</li>
-                            <li>✓ Perfect for any surface</li>
-                        </ul>
-                        <span class="category-price">From $15.99</span>
-                        <span class="shop-now">Shop Tabletop Displays →</span>
-                    </div>
-                </a>
             </div>
         </div>
     </section>
@@ -336,7 +354,7 @@
                         <li><a href="#">FAQs</a></li>
                         <li><a href="#">Shipping</a></li>
                         <li><a href="#">Returns</a></li>
-                        <li><a href="#">Contact Us</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
                     </ul>
                 </div>
                 

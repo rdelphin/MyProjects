@@ -73,9 +73,141 @@ async function loadPopularPrices() {
     }
 }
 
+// Mount Options Unified Slider Functionality
+function initMountSlider() {
+    const slides = document.querySelectorAll('.mount-slide');
+    const dots = document.querySelectorAll('.mount-dot');
+    const prevBtn = document.querySelector('.mount-slider-nav.prev');
+    const nextBtn = document.querySelector('.mount-slider-nav.next');
+    let currentSlideIndex = 0;
+    let autoPlayInterval;
+    
+    if (!slides.length) return;
+    
+    function showSlide(index) {
+        // Remove active class from all slides and dots
+        slides.forEach(slide => slide.classList.remove('active'));
+        dots.forEach(dot => dot.classList.remove('active'));
+        
+        // Ensure index is within bounds
+        if (index >= slides.length) {
+            currentSlideIndex = 0;
+        } else if (index < 0) {
+            currentSlideIndex = slides.length - 1;
+        } else {
+            currentSlideIndex = index;
+        }
+        
+        // Add active class to current slide and dot
+        slides[currentSlideIndex].classList.add('active');
+        dots[currentSlideIndex].classList.add('active');
+    }
+    
+    function nextSlide() {
+        showSlide(currentSlideIndex + 1);
+    }
+    
+    function prevSlide() {
+        showSlide(currentSlideIndex - 1);
+    }
+    
+    function startAutoPlay() {
+        autoPlayInterval = setInterval(nextSlide, 5000);
+    }
+    
+    function stopAutoPlay() {
+        clearInterval(autoPlayInterval);
+    }
+    
+    // Next button click
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            nextSlide();
+            stopAutoPlay();
+            startAutoPlay();
+        });
+    }
+    
+    // Previous button click
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            prevSlide();
+            stopAutoPlay();
+            startAutoPlay();
+        });
+    }
+    
+    // Dot click handlers
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            showSlide(index);
+            stopAutoPlay();
+            startAutoPlay();
+        });
+    });
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft') {
+            prevSlide();
+            stopAutoPlay();
+            startAutoPlay();
+        } else if (e.key === 'ArrowRight') {
+            nextSlide();
+            stopAutoPlay();
+            startAutoPlay();
+        }
+    });
+    
+    // Touch/Swipe support for mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    const sliderWrapper = document.querySelector('.mount-slider-wrapper');
+    
+    if (sliderWrapper) {
+        sliderWrapper.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        
+        sliderWrapper.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+        
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            if (touchEndX < touchStartX - swipeThreshold) {
+                nextSlide();
+                stopAutoPlay();
+                startAutoPlay();
+            }
+            if (touchEndX > touchStartX + swipeThreshold) {
+                prevSlide();
+                stopAutoPlay();
+                startAutoPlay();
+            }
+        }
+    }
+    
+    // Pause auto-play when slider is hovered
+    const sliderContainer = document.querySelector('.mount-slider-container');
+    if (sliderContainer) {
+        sliderContainer.addEventListener('mouseenter', stopAutoPlay);
+        sliderContainer.addEventListener('mouseleave', startAutoPlay);
+    }
+    
+    // Start auto-play
+    startAutoPlay();
+    
+    // Initialize first slide
+    showSlide(0);
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     updateCartCount();
     setupEmailForm();
     loadPopularPrices();
+    initMountSlider();
 });

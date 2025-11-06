@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Modenlo</title>
+    <link rel="stylesheet" href="landing-style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="logo/logo_noSlogan.png" alt="Modenlo" class="logo-image">
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="how-it-works.html">How It Works</a>
+                <a href="index.html#options">Display Options</a>
+                <a href="index.html#categories">Shop</a>
+                <a href="about-us.html">About Us</a>
+                <a href="price-list.html">Pricing</a>
+                <a href="cart.html" class="cart-link">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-count" id="cartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="about-hero">
+        <div class="section-container">
+            <h1 class="page-title">Contact Us</h1>
+            <p class="page-subtitle">We're here to help with any questions you may have</p>
+        </div>
+    </section>
+
+    <!-- Contact Options Section -->
+    <section class="about-section">
+        <div class="section-container">
+            <h2 class="section-title">Get In Touch</h2>
+            <p class="section-subtitle">Choose the best way to reach us</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📧</div>
+                    <h3>Email Support</h3>
+                    <p>Send us an email and we'll respond within 24 hours</p>
+                    <a href="mailto:support@modenlo.com" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">support@modenlo.com</a>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📞</div>
+                    <h3>Phone Support</h3>
+                    <p>Speak with our team during business hours</p>
+                    <a href="tel:+15551234567" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">(555) 123-4567</a>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Live Chat</h3>
+                    <p>Chat with us in real-time for quick questions</p>
+                    <button onclick="alert('Live chat feature coming soon!')" style="background: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; font-weight: 600;">Start Chat</button>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📍</div>
+                    <h3>Visit Us</h3>
+                    <p>Stop by our showroom to see samples</p>
+                    <p style="color: var(--text-light); margin-top: 0.5rem; font-size: 0.9rem;">123 Art District Ave<br>New York, NY 10001</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form Section -->
+    <section class="why-metal-section">
+        <div class="section-container">
+            <div class="about-grid" style="gap: 3rem; align-items: start;">
+                <!-- Contact Form -->
+                <div class="about-content">
+                    <h2>Send Us a Message</h2>
+                    <p style="color: var(--text-light); margin-bottom: 2rem;">Fill out the form below and we'll get back to you as soon as possible.</p>
+                    
+                    <form id="contactForm" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label for="firstName" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">First Name *</label>
+                                <input type="text" id="firstName" required style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem;">
+                            </div>
+                            <div>
+                                <label for="lastName" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Last Name *</label>
+                                <input type="text" id="lastName" required style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem;">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Email Address *</label>
+                            <input type="email" id="email" required style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem;">
+                        </div>
+                        
+                        <div>
+                            <label for="phone" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Phone Number</label>
+                            <input type="tel" id="phone" style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem;">
+                        </div>
+                        
+                        <div>
+                            <label for="subject" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Subject *</label>
+                            <select id="subject" required style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem; background: white;">
+                                <option value="">Select a topic...</option>
+                                <option value="order">Order Status</option>
+                                <option value="product">Product Question</option>
+                                <option value="shipping">Shipping & Delivery</option>
+                                <option value="return">Returns & Exchanges</option>
+                                <option value="technical">Technical Support</option>
+                                <option value="wholesale">Wholesale Inquiry</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="message" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-dark);">Message *</label>
+                            <textarea id="message" required rows="6" style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 1rem; resize: vertical; font-family: inherit;"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary-large" style="width: 100%;">Send Message</button>
+                        
+                        <p style="color: var(--text-light); font-size: 0.9rem; margin-top: -0.5rem;">* Required fields</p>
+                    </form>
+                </div>
+                
+                <!-- Business Information -->
+                <div class="about-image" style="display: flex; flex-direction: column; gap: 2rem;">
+                    <div style="background: var(--background-light); padding: 2rem; border-radius: 15px;">
+                        <h3 style="color: var(--text-dark); margin-bottom: 1rem;">Business Hours</h3>
+                        <div style="color: var(--text-light); line-height: 2;">
+                            <p><strong>Monday - Friday:</strong> 9:00 AM - 6:00 PM EST</p>
+                            <p><strong>Saturday:</strong> 10:00 AM - 4:00 PM EST</p>
+                            <p><strong>Sunday:</strong> Closed</p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--background-light); padding: 2rem; border-radius: 15px;">
+                        <h3 style="color: var(--text-dark); margin-bottom: 1rem;">Connect With Us</h3>
+                        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <a href="#" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: white; border-radius: 8px; text-decoration: none; color: var(--text-dark); font-weight: 600; transition: all 0.3s ease; border: 2px solid var(--border-color);">
+                                <span>📷</span> Instagram
+                            </a>
+                            <a href="#" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: white; border-radius: 8px; text-decoration: none; color: var(--text-dark); font-weight: 600; transition: all 0.3s ease; border: 2px solid var(--border-color);">
+                                <span>📘</span> Facebook
+                            </a>
+                            <a href="#" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: white; border-radius: 8px; text-decoration: none; color: var(--text-dark); font-weight: 600; transition: all 0.3s ease; border: 2px solid var(--border-color);">
+                                <span>📌</span> Pinterest
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--background-light); padding: 2rem; border-radius: 15px;">
+                        <h3 style="color: var(--text-dark); margin-bottom: 1rem;">Quick Links</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                            <a href="how-it-works.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">→ How It Works</a>
+                            <a href="price-list.html" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">→ Pricing & Sizes</a>
+                            <a href="#" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">→ Shipping Policy</a>
+                            <a href="#" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">→ Return Policy</a>
+                            <a href="#" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">→ FAQ</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="commitment-section">
+        <div class="section-container">
+            <h2 class="section-title">Frequently Asked Questions</h2>
+            <p class="section-subtitle">Quick answers to common questions</p>
+            
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h4>How long does shipping take?</h4>
+                    <p>Standard shipping takes 5-7 business days. Expedited options are available at checkout. Free shipping on all orders over $50.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h4>What is your return policy?</h4>
+                    <p>We offer a 30-day satisfaction guarantee. If you're not happy with your print, contact us for a full refund or replacement.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h4>Do you offer custom sizes?</h4>
+                    <p>Yes! While we have popular sizes available, we also offer custom sizing. Contact us with your specific dimensions for a quote.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h4>How do I track my order?</h4>
+                    <p>Once your order ships, you'll receive a tracking number via email. You can use this to monitor your shipment's progress.</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h4>What file formats do you accept?</h4>
+                    <p>We accept JPG, PNG, and HEIC files. For best results, upload high-resolution images (at least 300 DPI).</p>
+                </div>
+                
+                <div class="faq-item">
+                    <h4>Do you offer bulk/wholesale pricing?</h4>
+                    <p>Yes! We have special pricing for bulk orders and wholesale customers. Use the contact form above with subject "Wholesale Inquiry".</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section (Optional - placeholder) -->
+    <section class="about-section" style="padding: 4rem 0; background: var(--background-light);">
+        <div class="section-container">
+            <h2 class="section-title">Visit Our Showroom</h2>
+            <div style="background: white; border-radius: 15px; overflow: hidden; height: 400px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--border-color);">
+                <div style="text-align: center; color: var(--text-light);">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom: 1rem;">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    <p style="font-size: 1.1rem;"><strong>123 Art District Avenue</strong></p>
+                    <p>New York, NY 10001</p>
+                    <p style="margin-top: 1rem;">Map integration available</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="final-cta">
+        <div class="cta-container">
+            <h2>Ready to Create Your Metal Print?</h2>
+            <p>Start designing your custom print today</p>
+            <a href="framer.html" class="btn-primary-large">Get Started Now</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>Modenlo</h4>
+                    <p>Premium metal prints that bring your memories to life.</p>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="framer.html">Create Print</a></li>
+                        <li><a href="how-it-works.html">How It Works</a></li>
+                        <li><a href="index.html#categories">Shop</a></li>
+                        <li><a href="cart.html">Cart</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Shipping</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Follow Us</h4>
+                    <div class="social-links">
+                        <a href="#">Instagram</a>
+                        <a href="#">Facebook</a>
+                        <a href="#">Pinterest</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 Modenlo. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="landing-script.js"></script>
+    <script>
+        // Handle contact form submission
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const formData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                subject: document.getElementById('subject').value,
+                message: document.getElementById('message').value
+            };
+            
+            // In a real implementation, you would send this to your server
+            console.log('Form submitted:', formData);
+            
+            // Show success message
+            alert('Thank you for your message! We\'ll get back to you within 24 hours.');
+            
+            // Reset form
+            this.reset();
+        });
+    </script>
+</body>
+</html>
