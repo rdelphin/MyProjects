@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Clocks - Modenlo</title>
+    <link rel="stylesheet" href="landing-style.css">
+    <link rel="stylesheet" href="product-page-style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="logo/logo_noSlogan.png" alt="Modenlo" class="logo-image">
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="how-it-works.html">How It Works</a>
+                <a href="index.html#options">Display Options</a>
+                <a href="index.html#categories">Shop</a>
+                <a href="cart.html" class="cart-link">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-count" id="cartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Product Hero Section -->
+    <section class="product-hero">
+        <div class="product-hero-container">
+            <div class="product-hero-grid">
+                <!-- Product Info - Left Side -->
+                <div class="product-info-section">
+                    <h1 class="product-title">CUSTOM CLOCKS</h1>
+                    
+                    <p class="product-description">
+                        Transform your favorite images into functional art with our custom photo clocks. Perfect for home or office, 
+                        your images are infused into high-quality clock faces, taking on rich color vibrancy, 
+                        <span class="text-highlight">brilliant luminescence</span>, and durability that is unparalleled.
+                    </p>
+
+                    <div class="cta-section">
+                        <a href="framer.html?type=clock" class="btn-primary-large">Create Your Clock</a>
+                    </div>
+
+                    <!-- Available Sizes Section in Hero -->
+                    <div class="hero-sizes-section">
+                        <h3 class="hero-sizes-title">Available Sizes</h3>
+                        <div class="hero-sizes-grid" id="heroSizesGrid">
+                            <div class="loading">Loading sizes...</div>
+                        </div>
+                        <p class="hero-sizes-note">All sizes shown in diameter (inches). Prices shown are base prices.</p>
+                    </div>
+
+                    <!-- Clock Options Preview -->
+                    <div class="hero-sizes-section">
+                        <h3 class="hero-sizes-title">Customization Options</h3>
+                        <div id="clockOptionsPreview" class="clock-options-preview">
+                            <div class="loading">Loading options...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Image Carousel - Right Side -->
+                <div class="product-image-section">
+                    <div class="product-carousel">
+                        <div class="carousel-container">
+                            <div class="carousel-slides">
+                                <div class="carousel-slide active">
+                                    <img src="images/products/wall-display-hero.jpg" alt="Custom Clock Product 1">
+                                </div>
+                                <div class="carousel-slide">
+                                    <img src="images/wall-display.jpg" alt="Custom Clock Product 2">
+                                </div>
+                                <div class="carousel-slide">
+                                    <img src="images/wall-display01.jpg" alt="Custom Clock Product 3">
+                                </div>
+                            </div>
+                            
+                            <!-- Carousel Navigation -->
+                            <button class="carousel-btn carousel-prev" aria-label="Previous image">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M15 18l-6-6 6-6"/>
+                                </svg>
+                            </button>
+                            <button class="carousel-btn carousel-next" aria-label="Next image">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                            </button>
+                            
+                            <!-- Carousel Indicators -->
+                            <div class="carousel-indicators">
+                                <button class="indicator active" data-slide="0" aria-label="Go to image 1"></button>
+                                <button class="indicator" data-slide="1" aria-label="Go to image 2"></button>
+                                <button class="indicator" data-slide="2" aria-label="Go to image 3"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Clock Hands Options Section -->
+    <section class="feature-section feature-section-alt">
+        <div class="feature-container">
+            <div class="feature-image-wrapper">
+                <img src="images/wall-display.jpg" alt="Clock Hands Options" class="feature-image">
+            </div>
+            <div class="feature-content">
+                <span class="feature-badge">Clock Hands</span>
+                <h2 class="feature-heading">Choose your perfect style.</h2>
+                <p class="feature-text">Select from our variety of clock hand styles to match your aesthetic. From classic traditional hands to sleek modern designs, each option is precision-crafted for accurate timekeeping and visual appeal.</p>
+                <p class="feature-text">Our clock hands are made from high-quality materials that ensure smooth, quiet operation. Whether you prefer the timeless elegance of vintage hands or the clean lines of contemporary designs, we have options to suit every style.</p>
+                <a href="framer.html?type=clock" class="feature-link">
+                    View all options
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Frame Options Section -->
+    <section class="feature-section">
+        <div class="feature-container">
+            <div class="feature-content">
+                <span class="feature-badge">Frame Options</span>
+                <h2 class="feature-heading">Complete your timepiece with the perfect frame.</h2>
+                <p class="feature-text">Enhance your custom clock with our selection of premium frames. Each frame is carefully designed to complement your photo while providing structural support and a finished, professional look.</p>
+                <p class="feature-text">Choose from classic wooden frames for a warm, traditional feel, sleek metal frames for contemporary spaces, or lightweight plastic frames for a modern aesthetic. All frames are built to last and include mounting hardware.</p>
+                <a href="framer.html?type=clock" class="feature-link">
+                    Explore frames
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="feature-image-wrapper">
+                <img src="images/wall-display01.jpg" alt="Frame Options" class="feature-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- Print Quality Section -->
+    <section class="feature-section feature-section-alt">
+        <div class="feature-container">
+            <div class="feature-image-wrapper">
+                <img src="images/quality-showcase.jpg" alt="Print Quality" class="feature-image">
+            </div>
+            <div class="feature-content">
+                <span class="feature-badge">Print Quality</span>
+                <h2 class="feature-heading">Your memories, preserved in time.</h2>
+                <p class="feature-text">Our clocks feature museum-quality prints with vibrant color reproduction and exceptional detail. Each image is carefully printed using archival-quality materials to ensure your memories remain vivid for generations.</p>
+                <p class="feature-text">The print surface is UV-resistant and scratch-resistant, rated for 100+ years of display life. Combined with precision quartz clock movements, your custom clock will be both beautiful and reliable for years to come.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+        <div class="cta-container">
+            <h2>Ready to Make Time Personal?</h2>
+            <p>Create your custom photo clock in minutes</p>
+            <a href="framer.html?type=clock" class="btn-primary-large">Get Started Now</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>Modenlo</h4>
+                    <p>Premium framed prints that bring your memories to life.</p>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="framer.html">Create Frame</a></li>
+                        <li><a href="wall-displays.html">Wall Displays</a></li>
+                        <li><a href="tabletop-displays.html">Tabletop Displays</a></li>
+                        <li><a href="clock.html">Custom Clocks</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Shipping</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Follow Us</h4>
+                    <div class="social-links">
+                        <a href="#">Instagram</a>
+                        <a href="#">Facebook</a>
+                        <a href="#">Pinterest</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 Modenlo. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="cart-count-updater.js"></script>
+    <script src="clock-script.js"></script>
+</body>
+</html>

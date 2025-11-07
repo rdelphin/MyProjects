@@ -17,6 +17,7 @@ const MOUNTS_FILE = path.join(__dirname, 'data', 'mounts.json');
 const ORDERS_FILE = path.join(__dirname, 'data', 'orders.json');
 const DOWNLOADS_FILE = path.join(__dirname, 'data', 'downloads.json');
 const CATEGORIES_FILE = path.join(__dirname, 'data', 'categories.json');
+const CLOCKS_FILE = path.join(__dirname, 'data', 'clocks.json');
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads', 'mounts');
 
 // Configure multer for file uploads
@@ -268,6 +269,33 @@ app.get('/api/mounts/:id', async (req, res) => {
         }
     } catch (error) {
         res.status(500).json({ success: false, error: 'Failed to fetch mount' });
+    }
+});
+
+// Get all available clocks (public)
+app.get('/api/clocks', async (req, res) => {
+    try {
+        const data = await readClocksData();
+        const availableClocks = data.clocks.filter(clock => clock.available);
+        res.json({ success: true, clocks: availableClocks });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to fetch clocks' });
+    }
+});
+
+// Get a specific clock by ID (public)
+app.get('/api/clocks/:id', async (req, res) => {
+    try {
+        const data = await readClocksData();
+        const clock = data.clocks.find(c => c.id === req.params.id && c.available);
+        
+        if (clock) {
+            res.json({ success: true, clock });
+        } else {
+            res.status(404).json({ success: false, error: 'Clock not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to fetch clock' });
     }
 });
 
@@ -748,6 +776,167 @@ app.patch('/api/admin/categories/:id/availability', requireAdmin, async (req, re
         }
     } catch (error) {
         res.status(500).json({ success: false, error: 'Failed to update category availability' });
+    }
+});
+
+// CLOCK ROUTES
+
+// Helper functions for clocks
+async function readClocksData() {
+    try {
+        const data = await fs.readFile(CLOCKS_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Error reading clocks data:', error);
+        return { clocks: [] };
+    }
+}
+
+async function writeClocksData(data) {
+    try {
+        await fs.writeFile(CLOCKS_FILE, JSON.stringify(data, null, 2), 'utf8');
+        return true;
+    } catch (error) {
+        console.error('Error writing clocks data:', error);
+        return false;
+    }
+}
+
+// Get all clocks (admin)
+app.get('/api/admin/clocks', requireAdmin, async (req, res) => {
+    try {
+        const data = await readClocksData();
+        res.json({ success: true, clocks: data.clocks });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to fetch clocks' });
+    }
+});
+
+// Add a new clock (admin)
+app.post('/api/admin/clocks', requireAdmin, async (req, res) => {
+    try {
+        const { diameter, price, available, hands, frames } = req.body;
+        
+        if (!diameter || price === undefined) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Missing required fields: diameter, price' 
+            });
+        }
+        
+        const data = await readClocksData();
+        const id = `clock-${diameter}`;
+        
+        // Check if clock with this diameter already exists
+        const existingClock = data.clocks.find(c => c.id === id);
+        if (existingClock) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Clock with this diameter already exists' 
+            });
+        }
+        
+        const newClock = {
+            id,
+            diameter: parseInt(diameter),
+            price: parseFloat(price),
+            available: available !== undefined ? available : true,
+            hands: hands || [],
+            frames: frames || []
+        };
+        
+        data.clocks.push(newClock);
+        data.clocks.sort((a, b) => a.diameter - b.diameter);
+        
+        const success = await writeClocksData(data);
+        
+        if (success) {
+            res.json({ success: true, clock: newClock });
+        } else {
+            res.status(500).json({ success: false, error: 'Failed to save clock' });
+        }
+    } catch (error) {
+        console.error('Error adding clock:', error);
+        res.status(500).json({ success: false, error: 'Failed to add clock' });
+    }
+});
+
+// Update clock (admin)
+app.put('/api/admin/clocks/:id', requireAdmin, async (req, res) => {
+    try {
+        const { diameter, price, available, hands, frames } = req.body;
+        const data = await readClocksData();
+        
+        const clockIndex = data.clocks.findIndex(c => c.id === req.params.id);
+        
+        if (clockIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Clock not found' });
+        }
+        
+        if (diameter !== undefined) data.clocks[clockIndex].diameter = parseInt(diameter);
+        if (price !== undefined) data.clocks[clockIndex].price = parseFloat(price);
+        if (available !== undefined) data.clocks[clockIndex].available = available;
+        if (hands !== undefined) data.clocks[clockIndex].hands = hands;
+        if (frames !== undefined) data.clocks[clockIndex].frames = frames;
+        
+        const success = await writeClocksData(data);
+        
+        if (success) {
+            res.json({ success: true, clock: data.clocks[clockIndex] });
+        } else {
+            res.status(500).json({ success: false, error: 'Failed to update clock' });
+        }
+    } catch (error) {
+        console.error('Error updating clock:', error);
+        res.status(500).json({ success: false, error: 'Failed to update clock' });
+    }
+});
+
+// Delete clock (admin)
+app.delete('/api/admin/clocks/:id', requireAdmin, async (req, res) => {
+    try {
+        const data = await readClocksData();
+        const clockIndex = data.clocks.findIndex(c => c.id === req.params.id);
+        
+        if (clockIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Clock not found' });
+        }
+        
+        const deletedClock = data.clocks.splice(clockIndex, 1)[0];
+        const success = await writeClocksData(data);
+        
+        if (success) {
+            res.json({ success: true, clock: deletedClock });
+        } else {
+            res.status(500).json({ success: false, error: 'Failed to delete clock' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to delete clock' });
+    }
+});
+
+// Toggle clock availability (admin)
+app.patch('/api/admin/clocks/:id/availability', requireAdmin, async (req, res) => {
+    try {
+        const { available } = req.body;
+        const data = await readClocksData();
+        
+        const clockIndex = data.clocks.findIndex(c => c.id === req.params.id);
+        
+        if (clockIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Clock not found' });
+        }
+        
+        data.clocks[clockIndex].available = available;
+        const success = await writeClocksData(data);
+        
+        if (success) {
+            res.json({ success: true, clock: data.clocks[clockIndex] });
+        } else {
+            res.status(500).json({ success: false, error: 'Failed to update clock availability' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to update clock availability' });
     }
 });
 

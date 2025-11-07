@@ -29,6 +29,16 @@
       "link": "mouse-pad.html",
       "order": 3,
       "active": true
+    },
+    {
+      "id": "clock",
+      "name": "Custom Clocks",
+      "description": "Transform your favorite images into functional art with our custom photo clocks. Perfect for home or office, featuring precision quartz movements and museum-quality prints.",
+      "startingPrice": "$49.99",
+      "image": "images/wall-display01.jpg",
+      "link": "clock.html",
+      "order": 4,
+      "active": true
     }
   ]
 }

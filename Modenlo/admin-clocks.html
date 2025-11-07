@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Clocks - Modenlo Admin</title>
+    <link rel="stylesheet" href="admin-style.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="header-content">
+                <h1>🕐 Manage Clocks</h1>
+                <button id="logoutBtn" class="btn-secondary">Logout</button>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="admin-nav">
+            <a href="admin.html">Frames</a>
+            <a href="admin-mounts.html">Mounts</a>
+            <a href="admin-categories.html">Categories</a>
+            <a href="admin-clocks.html" class="active">Clocks</a>
+            <a href="admin-orders.html">Orders</a>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Add Clock Section -->
+            <section class="admin-section">
+                <h2>Add New Clock Size</h2>
+                <form id="addClockForm" class="admin-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="newDiameter">Diameter (inches) *</label>
+                            <input type="number" id="newDiameter" required placeholder="e.g., 12" min="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="newPrice">Base Price *</label>
+                            <input type="number" id="newPrice" step="0.01" required placeholder="e.g., 49.99" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="newAvailable" checked>
+                            <span>Available</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-primary">Add Clock Size</button>
+                </form>
+            </section>
+
+            <!-- Clocks List Section -->
+            <section class="admin-section">
+                <div class="section-header">
+                    <h2>Clock Sizes</h2>
+                    <span id="clocksCount" class="count-badge">0</span>
+                </div>
+
+                <div id="clocksContainer" class="table-container">
+                    <div class="loading">Loading clocks...</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Edit Clock Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2>Edit Clock - <span id="editClockDiameter"></span>"</h2>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <form id="editClockForm" class="admin-form">
+                    <input type="hidden" id="editClockId">
+                    
+                    <!-- Basic Info -->
+                    <h3>Basic Information</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="editDiameter">Diameter (inches) *</label>
+                            <input type="number" id="editDiameter" required min="1">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editPrice">Base Price *</label>
+                            <input type="number" id="editPrice" step="0.01" required min="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="editAvailable">
+                                <span>Available</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Clock Hands -->
+                    <h3 style="margin-top: 20px;">Clock Hands Options</h3>
+                    <div id="handsContainer">
+                        <!-- Hands will be dynamically added here -->
+                    </div>
+                    <button type="button" class="btn-secondary" onclick="addHandOption()">+ Add Hand Option</button>
+
+                    <!-- Clock Frames -->
+                    <h3 style="margin-top: 20px;">Frame Options</h3>
+                    <div id="framesContainer">
+                        <!-- Frames will be dynamically added here -->
+                    </div>
+                    <button type="button" class="btn-secondary" onclick="addFrameOption()">+ Add Frame Option</button>
+
+                    <div class="modal-actions" style="margin-top: 30px;">
+                        <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="admin-clocks-script.js"></script>
+</body>
+</html>

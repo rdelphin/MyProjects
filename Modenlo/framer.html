@@ -109,7 +109,8 @@
                         <button id="resetPosition" class="reset-btn">Reset Position</button>
                     </div>
 
-                    <div class="form-section">
+                    <!-- Mount section for regular frames -->
+                    <div class="form-section" id="mountSection">
                         <div class="mount-header">
                             <span class="mount-label">METAL MOUNT:</span>
                             <span class="mount-selected-name" id="mountSelectedName">No Mount</span>
@@ -117,6 +118,30 @@
                         </div>
                         <div class="mount-grid-cards" id="mountGrid">
                             <!-- Mount options will be populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Clock Hands section (only for clocks) -->
+                    <div class="form-section" id="clockHandsSection" style="display: none;">
+                        <div class="mount-header">
+                            <span class="mount-label">CLOCK HANDS:</span>
+                            <span class="mount-selected-name" id="handsSelectedName">Classic</span>
+                            <span class="mount-selected-price" id="handsSelectedPrice"></span>
+                        </div>
+                        <div class="mount-grid-cards" id="handsGrid">
+                            <!-- Clock hands options will be populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Frame Options section (only for clocks) -->
+                    <div class="form-section" id="frameOptionsSection" style="display: none;">
+                        <div class="mount-header">
+                            <span class="mount-label">FRAME OPTION:</span>
+                            <span class="mount-selected-name" id="frameOptionSelectedName">Wooden Frame</span>
+                            <span class="mount-selected-price" id="frameOptionSelectedPrice"></span>
+                        </div>
+                        <div class="mount-grid-cards" id="frameOptionsGrid">
+                            <!-- Frame options will be populated dynamically -->
                         </div>
                     </div>
 

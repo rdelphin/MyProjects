@@ -32,7 +32,10 @@ let state = {
     dragStart: { x: 0, y: 0 },
     frameSize: '8x10',
     orientation: 'portrait',
-    selectedMount: 'no-mount'
+    selectedMount: 'no-mount',
+    selectedClockHands: null,
+    selectedFrameOption: null,
+    currentClockData: null
 };
 
 // DOM elements
@@ -63,7 +66,260 @@ const closeWarningBtn = document.getElementById('closeWarning');
 // Get display type from URL parameter
 function getDisplayType() {
     const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('type'); // Returns 'wall', 'tabletop', or null
+    return urlParams.get('type'); // Returns 'wall', 'tabletop', 'clock', or null
+}
+
+// Check if current product is a clock
+function isClock() {
+    return getDisplayType() === 'clock';
+}
+
+// Load clocks from API (for clock product type)
+async function loadClocks() {
+    try {
+        const response = await fetch(`${API_BASE}/clocks`);
+        const data = await response.json();
+        
+        if (data.success && data.clocks.length > 0) {
+            const availableClocks = data.clocks.filter(clock => clock.available);
+            
+            // Build FRAME_SIZES object from clock data (using diameter as "size")
+            FRAME_SIZES = {};
+            availableClocks.forEach(clock => {
+                const size = clock.diameter.toString();
+                // For circular clocks, width and height are the same (diameter)
+                const diameter = clock.diameter * 300; // Convert inches to pixels (assuming 300 DPI)
+                FRAME_SIZES[size] = {
+                    width: diameter,
+                    height: diameter,
+                    price: clock.price,
+                    clockData: clock // Store the full clock object
+                };
+            });
+            
+            // Populate size dropdown
+            frameSizeSelect.innerHTML = availableClocks.map(clock => 
+                `<option value="${clock.diameter}">${clock.diameter}" Diameter - $${clock.price.toFixed(2)}</option>`
+            ).join('');
+            
+            // Set default if needed
+            if (availableClocks.length > 0 && !FRAME_SIZES[state.frameSize]) {
+                state.frameSize = availableClocks[0].diameter.toString();
+                frameSizeSelect.value = state.frameSize;
+                state.currentClockData = availableClocks[0];
+            } else if (FRAME_SIZES[state.frameSize]) {
+                state.currentClockData = FRAME_SIZES[state.frameSize].clockData;
+            }
+            
+            // Load clock hands and frame options for the selected clock
+            if (state.currentClockData) {
+                loadClockHands(state.currentClockData);
+                loadClockFrameOptions(state.currentClockData);
+            }
+            
+            // Update price display
+            updatePriceDisplay();
+        } else {
+            console.error('No clocks available from API');
+        }
+    } catch (error) {
+        console.error('Error loading clocks:', error);
+    }
+}
+
+// Load clock hands options
+function loadClockHands(clockData) {
+    if (!clockData || !clockData.hands || clockData.hands.length === 0) return;
+    
+    const handsGrid = document.getElementById('handsGrid');
+    if (!handsGrid) return;
+    
+    // Set default if not set
+    if (!state.selectedClockHands && clockData.hands.length > 0) {
+        state.selectedClockHands = clockData.hands[0].id;
+    }
+    
+    // Populate clock hands grid
+    handsGrid.innerHTML = clockData.hands.map(hands => {
+        const isSelected = hands.id === state.selectedClockHands;
+        
+        // Determine icon based on hands type
+        let icon = '🕐';
+        if (hands.id.toLowerCase().includes('modern')) icon = '⚡';
+        else if (hands.id.toLowerCase().includes('vintage')) icon = '🕰️';
+        
+        // Image content
+        let imageContent;
+        if (hands.thumbnail) {
+            imageContent = `<img src="${hands.thumbnail}" alt="${hands.name}">`;
+        } else {
+            imageContent = `<span class="mount-card-image-placeholder">${icon}</span>`;
+        }
+        
+        return `
+            <div class="mount-card ${isSelected ? 'selected' : ''}" data-hands-id="${hands.id}">
+                <div class="mount-card-image">
+                    ${imageContent}
+                    <div class="mount-card-label">
+                        ${hands.name.toUpperCase()}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 11 12 14 22 4"></polyline>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mount-card-name">${hands.name}</div>
+            </div>
+        `;
+    }).join('');
+    
+    // Add click event listeners
+    handsGrid.querySelectorAll('.mount-card').forEach(card => {
+        card.addEventListener('click', handleClockHandsSelection);
+    });
+    
+    // Update header
+    updateClockHandsHeader(clockData);
+}
+
+// Load clock frame options
+function loadClockFrameOptions(clockData) {
+    if (!clockData || !clockData.frames || clockData.frames.length === 0) return;
+    
+    const frameOptionsGrid = document.getElementById('frameOptionsGrid');
+    if (!frameOptionsGrid) return;
+    
+    // Set default if not set
+    if (!state.selectedFrameOption && clockData.frames.length > 0) {
+        state.selectedFrameOption = clockData.frames[0].id;
+    }
+    
+    // Populate frame options grid
+    frameOptionsGrid.innerHTML = clockData.frames.map(frame => {
+        const isSelected = frame.id === state.selectedFrameOption;
+        
+        // Determine icon based on frame type
+        let icon = '🖼️';
+        if (frame.id.toLowerCase().includes('wooden')) icon = '🌲';
+        else if (frame.id.toLowerCase().includes('metal')) icon = '⚙️';
+        else if (frame.id.toLowerCase().includes('plastic')) icon = '🔲';
+        
+        // Image content
+        let imageContent;
+        if (frame.thumbnail) {
+            imageContent = `<img src="${frame.thumbnail}" alt="${frame.name}">`;
+        } else {
+            imageContent = `<span class="mount-card-image-placeholder">${icon}</span>`;
+        }
+        
+        return `
+            <div class="mount-card ${isSelected ? 'selected' : ''}" data-frame-id="${frame.id}">
+                <div class="mount-card-image">
+                    ${imageContent}
+                    <div class="mount-card-label">
+                        ${frame.name.toUpperCase()}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 11 12 14 22 4"></polyline>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mount-card-name">${frame.name}</div>
+            </div>
+        `;
+    }).join('');
+    
+    // Add click event listeners
+    frameOptionsGrid.querySelectorAll('.mount-card').forEach(card => {
+        card.addEventListener('click', handleFrameOptionSelection);
+    });
+    
+    // Update header
+    updateFrameOptionHeader(clockData);
+}
+
+// Handle clock hands selection
+function handleClockHandsSelection(e) {
+    const handsCard = e.currentTarget;
+    const handsId = handsCard.dataset.handsId;
+    
+    // Update state
+    state.selectedClockHands = handsId;
+    
+    // Update UI
+    document.querySelectorAll('#handsGrid .mount-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    handsCard.classList.add('selected');
+    
+    // Update price display and header
+    updatePriceDisplay();
+    updateClockHandsHeader(state.currentClockData);
+}
+
+// Handle frame option selection
+function handleFrameOptionSelection(e) {
+    const frameCard = e.currentTarget;
+    const frameId = frameCard.dataset.frameId;
+    
+    // Update state
+    state.selectedFrameOption = frameId;
+    
+    // Update UI
+    document.querySelectorAll('#frameOptionsGrid .mount-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    frameCard.classList.add('selected');
+    
+    // Update price display and header
+    updatePriceDisplay();
+    updateFrameOptionHeader(state.currentClockData);
+}
+
+// Update clock hands header
+function updateClockHandsHeader(clockData) {
+    const handsSelectedName = document.getElementById('handsSelectedName');
+    const handsSelectedPrice = document.getElementById('handsSelectedPrice');
+    
+    if (!clockData || !clockData.hands) return;
+    
+    const selectedHands = clockData.hands.find(h => h.id === state.selectedClockHands);
+    if (selectedHands) {
+        if (handsSelectedName) {
+            handsSelectedName.textContent = selectedHands.name;
+        }
+        
+        if (handsSelectedPrice) {
+            if (selectedHands.price > 0) {
+                handsSelectedPrice.textContent = `+$${selectedHands.price.toFixed(2)}`;
+            } else {
+                handsSelectedPrice.textContent = '';
+            }
+        }
+    }
+}
+
+// Update frame option header
+function updateFrameOptionHeader(clockData) {
+    const frameOptionSelectedName = document.getElementById('frameOptionSelectedName');
+    const frameOptionSelectedPrice = document.getElementById('frameOptionSelectedPrice');
+    
+    if (!clockData || !clockData.frames) return;
+    
+    const selectedFrame = clockData.frames.find(f => f.id === state.selectedFrameOption);
+    if (selectedFrame) {
+        if (frameOptionSelectedName) {
+            frameOptionSelectedName.textContent = selectedFrame.name;
+        }
+        
+        if (frameOptionSelectedPrice) {
+            if (selectedFrame.price > 0) {
+                frameOptionSelectedPrice.textContent = `+$${selectedFrame.price.toFixed(2)}`;
+            } else {
+                frameOptionSelectedPrice.textContent = '';
+            }
+        }
+    }
 }
 
 // Load frames from API
@@ -163,18 +419,43 @@ function populateFrameDropdown(frames) {
 
 // Update price display
 function updatePriceDisplay() {
-    if (FRAME_SIZES[state.frameSize] && MOUNT_OPTIONS[state.selectedMount]) {
-        const framePrice = FRAME_SIZES[state.frameSize].price;
-        const mountPrice = MOUNT_OPTIONS[state.selectedMount].price;
-        const totalPrice = framePrice + mountPrice;
-        
-        // Update main price display
-        if (totalPriceMain && totalCentsMain) {
-            const dollars = Math.floor(totalPrice);
-            const cents = Math.round((totalPrice - dollars) * 100);
-            totalPriceMain.textContent = dollars;
-            totalCentsMain.textContent = cents.toString().padStart(2, '0');
+    let totalPrice = 0;
+    
+    // Add frame/clock base price
+    if (FRAME_SIZES[state.frameSize]) {
+        totalPrice += FRAME_SIZES[state.frameSize].price;
+    }
+    
+    // For clocks: add clock hands and frame option prices
+    if (isClock() && state.currentClockData) {
+        // Add clock hands price
+        if (state.selectedClockHands && state.currentClockData.hands) {
+            const selectedHands = state.currentClockData.hands.find(h => h.id === state.selectedClockHands);
+            if (selectedHands) {
+                totalPrice += selectedHands.price;
+            }
         }
+        
+        // Add frame option price
+        if (state.selectedFrameOption && state.currentClockData.frames) {
+            const selectedFrame = state.currentClockData.frames.find(f => f.id === state.selectedFrameOption);
+            if (selectedFrame) {
+                totalPrice += selectedFrame.price;
+            }
+        }
+    } else {
+        // For regular frames: add mount price
+        if (MOUNT_OPTIONS[state.selectedMount]) {
+            totalPrice += MOUNT_OPTIONS[state.selectedMount].price;
+        }
+    }
+    
+    // Update main price display
+    if (totalPriceMain && totalCentsMain) {
+        const dollars = Math.floor(totalPrice);
+        const cents = Math.round((totalPrice - dollars) * 100);
+        totalPriceMain.textContent = dollars;
+        totalCentsMain.textContent = cents.toString().padStart(2, '0');
     }
 }
 
@@ -371,14 +652,50 @@ function updateMountHeader() {
     }
 }
 
+// Toggle section visibility based on product type
+function toggleSectionVisibility() {
+    const mountSection = document.getElementById('mountSection');
+    const clockHandsSection = document.getElementById('clockHandsSection');
+    const frameOptionsSection = document.getElementById('frameOptionsSection');
+    
+    if (isClock()) {
+        // Hide mount section, show clock sections
+        if (mountSection) mountSection.style.display = 'none';
+        if (clockHandsSection) clockHandsSection.style.display = 'block';
+        if (frameOptionsSection) frameOptionsSection.style.display = 'block';
+    } else {
+        // Show mount section, hide clock sections
+        if (mountSection) mountSection.style.display = 'block';
+        if (clockHandsSection) clockHandsSection.style.display = 'none';
+        if (frameOptionsSection) frameOptionsSection.style.display = 'none';
+    }
+}
+
 // Initialize event listeners
 function init() {
     // Check user session
     checkUserSession();
     
-    // Load frames and mounts from API
-    loadFrames();
-    loadMounts();
+    // Toggle section visibility based on product type
+    toggleSectionVisibility();
+    
+    // Load frames/clocks and mounts from API based on product type
+    if (isClock()) {
+        loadClocks();
+        // Disable orientation for clocks since they're always circular
+        if (orientationSelect) {
+            orientationSelect.disabled = true;
+            orientationSelect.style.display = 'none';
+            // Also hide the label
+            const orientationLabel = orientationSelect.previousElementSibling;
+            if (orientationLabel && orientationLabel.classList.contains('form-label')) {
+                orientationLabel.style.display = 'none';
+            }
+        }
+    } else {
+        loadFrames();
+        loadMounts();
+    }
     
     // File upload
     photoUpload.addEventListener('change', handleFileSelect);
@@ -773,6 +1090,66 @@ function drawCropOverlay() {
     const dimensions = getFrameDimensions(state.frameSize, state.orientation);
     const printAspect = dimensions.width / dimensions.height;
     
+    // Check if this is a clock (circular)
+    const isCircular = isClock() || printAspect === 1;
+    
+    if (isCircular) {
+        // Draw circular crop overlay for clocks
+        const radius = Math.min(canvasWidth, canvasHeight) / 2;
+        const centerX = canvasWidth / 2;
+        const centerY = canvasHeight / 2;
+        
+        // Draw darkened overlay outside circle
+        cropCtx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        cropCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+        
+        // Cut out the circular area
+        cropCtx.globalCompositeOperation = 'destination-out';
+        cropCtx.beginPath();
+        cropCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        cropCtx.fill();
+        cropCtx.globalCompositeOperation = 'source-over';
+        
+        // Draw circular border
+        cropCtx.strokeStyle = 'rgba(102, 126, 234, 0.8)';
+        cropCtx.lineWidth = 2;
+        cropCtx.beginPath();
+        cropCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        cropCtx.stroke();
+        
+        // Add circular markers at 12, 3, 6, 9 o'clock positions
+        const markerSize = 20;
+        cropCtx.strokeStyle = 'rgba(102, 126, 234, 1)';
+        cropCtx.lineWidth = 3;
+        
+        // 12 o'clock
+        cropCtx.beginPath();
+        cropCtx.moveTo(centerX, centerY - radius);
+        cropCtx.lineTo(centerX, centerY - radius + markerSize);
+        cropCtx.stroke();
+        
+        // 3 o'clock
+        cropCtx.beginPath();
+        cropCtx.moveTo(centerX + radius, centerY);
+        cropCtx.lineTo(centerX + radius - markerSize, centerY);
+        cropCtx.stroke();
+        
+        // 6 o'clock
+        cropCtx.beginPath();
+        cropCtx.moveTo(centerX, centerY + radius);
+        cropCtx.lineTo(centerX, centerY + radius - markerSize);
+        cropCtx.stroke();
+        
+        // 9 o'clock
+        cropCtx.beginPath();
+        cropCtx.moveTo(centerX - radius, centerY);
+        cropCtx.lineTo(centerX - radius + markerSize, centerY);
+        cropCtx.stroke();
+        
+        return;
+    }
+    
+    // Rectangle crop overlay for regular frames
     // Calculate crop area in canvas coordinates
     let cropWidth, cropHeight, cropX, cropY;
     
@@ -1145,24 +1522,57 @@ function addToCart(e) {
     
     const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.7);
     
+    // Calculate total price
+    let totalPrice = FRAME_SIZES[state.frameSize] ? FRAME_SIZES[state.frameSize].price : 0;
+    
     // Create cart item with FINAL processed image
     const cartItem = {
         id: Date.now(),
         frameSize: state.frameSize,
         frameSizeName: FRAME_SIZES[state.frameSize] ? state.frameSize : '8x10',
         framePrice: FRAME_SIZES[state.frameSize] ? FRAME_SIZES[state.frameSize].price : 0,
-        mountId: state.selectedMount,
-        mountName: MOUNT_OPTIONS[state.selectedMount] ? MOUNT_OPTIONS[state.selectedMount].name : 'No Mount',
-        mountPrice: MOUNT_OPTIONS[state.selectedMount] ? MOUNT_OPTIONS[state.selectedMount].price : 0,
         orientation: state.orientation,
         zoom: state.currentZoom,
         position: { ...state.imagePosition },
-        imageData: finalImageData, // This is now the FINAL processed image
+        imageData: finalImageData,
         previewImage: previewDataUrl,
-        totalPrice: (FRAME_SIZES[state.frameSize] ? FRAME_SIZES[state.frameSize].price : 0) + 
-                   (MOUNT_OPTIONS[state.selectedMount] ? MOUNT_OPTIONS[state.selectedMount].price : 0),
         addedAt: new Date().toISOString()
     };
+    
+    // Add clock-specific or regular frame-specific data
+    if (isClock() && state.currentClockData) {
+        // For clocks: add hands and frame option details
+        if (state.selectedClockHands && state.currentClockData.hands) {
+            const selectedHands = state.currentClockData.hands.find(h => h.id === state.selectedClockHands);
+            if (selectedHands) {
+                cartItem.clockHandsId = selectedHands.id;
+                cartItem.clockHandsName = selectedHands.name;
+                cartItem.clockHandsPrice = selectedHands.price;
+                totalPrice += selectedHands.price;
+            }
+        }
+        
+        if (state.selectedFrameOption && state.currentClockData.frames) {
+            const selectedFrame = state.currentClockData.frames.find(f => f.id === state.selectedFrameOption);
+            if (selectedFrame) {
+                cartItem.frameOptionId = selectedFrame.id;
+                cartItem.frameOptionName = selectedFrame.name;
+                cartItem.frameOptionPrice = selectedFrame.price;
+                totalPrice += selectedFrame.price;
+            }
+        }
+        
+        cartItem.productType = 'clock';
+    } else {
+        // For regular frames: add mount details
+        cartItem.mountId = state.selectedMount;
+        cartItem.mountName = MOUNT_OPTIONS[state.selectedMount] ? MOUNT_OPTIONS[state.selectedMount].name : 'No Mount';
+        cartItem.mountPrice = MOUNT_OPTIONS[state.selectedMount] ? MOUNT_OPTIONS[state.selectedMount].price : 0;
+        totalPrice += cartItem.mountPrice;
+        cartItem.productType = 'frame';
+    }
+    
+    cartItem.totalPrice = totalPrice;
     
     // Add to cart
     const cart = getCart();
@@ -1171,10 +1581,6 @@ function addToCart(e) {
     
     // Show toast notification
     showToast('✅ Item added to cart!');
-    
-    // Stay on current page - user can manually click "Upload New Photo" if they want to add another item
-    // Or click cart icon to view their cart
-    // Cart badge will update automatically to show item was added
 }
 
 // Generate final framed image for download/cart
