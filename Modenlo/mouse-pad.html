@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mouse Pads - Modenlo</title>
+    <link rel="stylesheet" href="landing-style.css">
+    <link rel="stylesheet" href="product-page-style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="logo/logo_noSlogan.png" alt="Modenlo" class="logo-image">
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="how-it-works.html">How It Works</a>
+                <a href="index.html#options">Display Options</a>
+                <a href="index.html#categories">Shop</a>
+                <a href="cart.html" class="cart-link">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <span class="cart-count" id="cartCount">0</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Product Hero Section -->
+    <section class="product-hero">
+        <div class="product-hero-container">
+            <div class="product-hero-grid">
+                <!-- Product Info - Left Side -->
+                <div class="product-info-section">
+                    <h1 class="product-title">MOUSE PADS</h1>
+                    
+                    <p class="product-description">
+                        Transform your workspace with our premium mouse pads featuring your favorite images and artwork. 
+                        Perfect for desks and workstations, your images are infused into the print, taking on rich color vibrancy, 
+                        <span class="text-highlight">brilliant luminescence</span>, and durability that is unparalleled.
+                    </p>
+
+                    <div class="cta-section">
+                        <a href="framer.html?type=mousepad" class="btn-primary-large">Create Your Mouse Pad</a>
+                    </div>
+
+                    <!-- Available Sizes Section in Hero -->
+                    <div class="hero-sizes-section">
+                        <h3 class="hero-sizes-title">Available Sizes</h3>
+                        <div class="hero-sizes-grid" id="heroSizesGrid">
+                            <div class="loading">Loading sizes...</div>
+                        </div>
+                        <p class="hero-sizes-note">All sizes shown in inches. Sizes 30" and above available for mouse pads.</p>
+                    </div>
+                </div>
+
+                <!-- Product Image Carousel - Right Side -->
+                <div class="product-image-section">
+                    <div class="product-carousel">
+                        <div class="carousel-container">
+                            <div class="carousel-slides">
+                                <div class="carousel-slide active">
+                                    <img src="images/products/wall-display-hero.jpg" alt="Mouse Pad Product 1">
+                                </div>
+                                <div class="carousel-slide">
+                                    <img src="images/wall-display.jpg" alt="Mouse Pad Product 2">
+                                </div>
+                                <div class="carousel-slide">
+                                    <img src="images/wall-display01.jpg" alt="Mouse Pad Product 3">
+                                </div>
+                            </div>
+                            
+                            <!-- Carousel Navigation -->
+                            <button class="carousel-btn carousel-prev" aria-label="Previous image">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M15 18l-6-6 6-6"/>
+                                </svg>
+                            </button>
+                            <button class="carousel-btn carousel-next" aria-label="Next image">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18l6-6-6-6"/>
+                                </svg>
+                            </button>
+                            
+                            <!-- Carousel Indicators -->
+                            <div class="carousel-indicators">
+                                <button class="indicator active" data-slide="0" aria-label="Go to image 1"></button>
+                                <button class="indicator" data-slide="1" aria-label="Go to image 2"></button>
+                                <button class="indicator" data-slide="2" aria-label="Go to image 3"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Print Quality Section -->
+    <section class="feature-section">
+        <div class="feature-container">
+            <div class="feature-content">
+                <span class="feature-badge">Premium Quality</span>
+                <h2 class="feature-heading">Professional mouse pads that inspire productivity.</h2>
+                <p class="feature-text">Our mouse pads feature a smooth, high-quality surface with vibrant color reproduction and exceptional detail. Each pad is carefully crafted using premium materials to ensure smooth mouse tracking and long-lasting durability.</p>
+                <p class="feature-text">Choose from multiple finish options including High Gloss, Soft Gloss, Matte, and Pearl to perfectly match your workspace style. All pads come with a non-slip rubber backing and are designed for daily professional use.</p>
+                <a href="#" class="feature-link">
+                    Learn more
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="feature-image-wrapper">
+                <img src="images/wall-display01.jpg" alt="Mouse Pad Quality" class="feature-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="feature-section feature-section-alt">
+        <div class="feature-container">
+            <div class="feature-image-wrapper">
+                <img src="images/wall-display.jpg" alt="Mouse Pad Features" class="feature-image">
+            </div>
+            <div class="feature-content">
+                <span class="feature-badge">Product Features</span>
+                <h2 class="feature-heading">Designed for comfort and performance.</h2>
+                <p class="feature-text">Each mouse pad features a premium surface optimized for all mouse types, from optical to laser. The smooth texture ensures precise tracking while the vibrant print adds a personal touch to your workspace.</p>
+                <p class="feature-text">The non-slip rubber backing keeps your mouse pad securely in place during use, while the durable construction ensures it will maintain its quality through years of daily use. Available in landscape orientation to maximize your workspace.</p>
+                <a href="price-list.html" class="feature-link">
+                    View pricing
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="final-cta">
+        <div class="cta-container">
+            <h2>Ready to Personalize Your Workspace?</h2>
+            <p>Create your custom mouse pad in minutes</p>
+            <a href="framer.html?type=mousepad" class="btn-primary-large">Get Started Now</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>Modenlo</h4>
+                    <p>Premium framed prints that bring your memories to life.</p>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="framer.html">Create Frame</a></li>
+                        <li><a href="wall-displays.html">Wall Displays</a></li>
+                        <li><a href="tabletop-displays.html">Tabletop Displays</a></li>
+                        <li><a href="mouse-pad.html">Mouse Pads</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul>
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Shipping</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="contact.html">Contact Us</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4>Follow Us</h4>
+                    <div class="social-links">
+                        <a href="#">Instagram</a>
+                        <a href="#">Facebook</a>
+                        <a href="#">Pinterest</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2025 Modenlo. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="cart-count-updater.js"></script>
+    <script>
+        // Load available sizes (30" and above only)
+        async function loadSizes() {
+            try {
+                const response = await fetch('http://localhost:3000/api/frames');
+                const data = await response.json();
+                const frames = data.frames || data;
+                
+                const heroSizesGrid = document.getElementById('heroSizesGrid');
+                
+                if (frames && frames.length > 0) {
+                    // Filter for sizes 30" and above
+                    const filteredFrames = frames.filter(frame => {
+                        const sizeNum = parseInt(frame.size);
+                        return sizeNum >= 30;
+                    });
+                    
+                    filteredFrames.sort((a, b) => a.price - b.price);
+                    
+                    if (filteredFrames.length > 0) {
+                        // Show only first 6 sizes in hero
+                        const displayFrames = filteredFrames.slice(0, 6);
+                        
+                        heroSizesGrid.innerHTML = displayFrames.map(frame => `
+                            <div class="hero-size-card">
+                                <div class="hero-size-dimension">${frame.size}"</div>
+                                <div class="hero-size-price">$${frame.price.toFixed(2)}</div>
+                            </div>
+                        `).join('');
+                    } else {
+                        heroSizesGrid.innerHTML = '<p class="loading">No sizes 30" and above available</p>';
+                    }
+                } else {
+                    heroSizesGrid.innerHTML = '<p class="loading">No sizes available</p>';
+                }
+            } catch (error) {
+                console.error('Error loading sizes:', error);
+                document.getElementById('heroSizesGrid').innerHTML = '<p class="loading">Unable to load sizes</p>';
+            }
+        }
+        
+        // Image Carousel
+        class Carousel {
+            constructor() {
+                this.currentSlide = 0;
+                this.slides = document.querySelectorAll('.carousel-slide');
+                this.indicators = document.querySelectorAll('.indicator');
+                this.prevBtn = document.querySelector('.carousel-prev');
+                this.nextBtn = document.querySelector('.carousel-next');
+                
+                this.init();
+            }
+            
+            init() {
+                // Button event listeners
+                this.prevBtn.addEventListener('click', () => this.prevSlide());
+                this.nextBtn.addEventListener('click', () => this.nextSlide());
+                
+                // Indicator event listeners
+                this.indicators.forEach((indicator, index) => {
+                    indicator.addEventListener('click', () => this.goToSlide(index));
+                });
+                
+                // Touch/swipe support
+                let touchStartX = 0;
+                let touchEndX = 0;
+                const carousel = document.querySelector('.carousel-container');
+                
+                carousel.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                });
+                
+                carousel.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    this.handleSwipe();
+                });
+                
+                this.handleSwipe = () => {
+                    if (touchStartX - touchEndX > 50) {
+                        this.nextSlide();
+                    }
+                    if (touchEndX - touchStartX > 50) {
+                        this.prevSlide();
+                    }
+                };
+                
+                // Auto-play (optional - every 5 seconds)
+                setInterval(() => this.nextSlide(), 5000);
+            }
+            
+            goToSlide(index) {
+                this.slides[this.currentSlide].classList.remove('active');
+                this.indicators[this.currentSlide].classList.remove('active');
+                
+                this.currentSlide = index;
+                
+                this.slides[this.currentSlide].classList.add('active');
+                this.indicators[this.currentSlide].classList.add('active');
+            }
+            
+            nextSlide() {
+                let next = (this.currentSlide + 1) % this.slides.length;
+                this.goToSlide(next);
+            }
+            
+            prevSlide() {
+                let prev = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+                this.goToSlide(prev);
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSizes();
+            new Carousel();
+        });
+    </script>
+</body>
+</html>

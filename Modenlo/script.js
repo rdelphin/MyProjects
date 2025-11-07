@@ -86,6 +86,12 @@ async function loadFrames() {
                     const height = parseInt(parts[1]);
                     return width <= 11 && height <= 14;
                 });
+            } else if (displayType === 'mousepad') {
+                // Mouse Pad: only 30" and above sizes
+                framesToShow = data.frames.filter(frame => {
+                    const sizeNum = parseInt(frame.size);
+                    return sizeNum >= 30;
+                });
             }
             
             // Build FRAME_SIZES object from API data
@@ -224,6 +230,11 @@ async function loadMounts() {
                 const excludedMountIds = ['easel', 'bamboo'];
                 mountsToShow = data.mounts.filter(mount => 
                     !excludedMountIds.includes(mount.id.toLowerCase())
+                );
+            } else if (displayType === 'mousepad') {
+                // Mouse Pad: Only show No Mount
+                mountsToShow = data.mounts.filter(mount => 
+                    mount.id.toLowerCase() === 'no-mount'
                 );
             }
             // If displayType is null (direct access to framer), show all mounts
@@ -587,6 +598,21 @@ function loadImage(file) {
 
 // Detect and suggest orientation based on image dimensions
 function detectImageOrientation(img) {
+    const displayType = getDisplayType();
+    
+    // For Mouse Pad, always use landscape and disable orientation selector
+    if (displayType === 'mousepad') {
+        state.orientation = 'landscape';
+        if (orientationSelect) {
+            orientationSelect.value = 'landscape';
+            orientationSelect.disabled = true;
+            orientationSelect.style.opacity = '0.6';
+            orientationSelect.style.cursor = 'not-allowed';
+        }
+        return;
+    }
+    
+    // For other product types, auto-detect based on image aspect ratio
     const imgAspect = img.width / img.height;
     
     if (imgAspect > 1) {
@@ -604,6 +630,10 @@ function detectImageOrientation(img) {
 function updateOrientationSelectUI() {
     if (orientationSelect) {
         orientationSelect.value = state.orientation;
+        // Re-enable if it was disabled (in case user switches product types)
+        orientationSelect.disabled = false;
+        orientationSelect.style.opacity = '1';
+        orientationSelect.style.cursor = 'pointer';
     }
 }
 
