@@ -73,6 +73,47 @@ async function loadPopularPrices() {
     }
 }
 
+// Load categories dynamically
+async function loadCategories() {
+    const categoriesGrid = document.getElementById('categoriesGrid');
+    if (!categoriesGrid) return;
+    
+    try {
+        const response = await fetch('http://localhost:3000/api/categories');
+        const data = await response.json();
+        
+        const categories = data.categories || [];
+        
+        if (categories && categories.length > 0) {
+            categoriesGrid.innerHTML = categories.map(category => `
+                <a href="${category.link}" class="category-new-card">
+                    <div class="category-new-content">
+                        <div class="category-new-text">
+                            <h2 class="category-new-title">${category.name}</h2>
+                            <p class="category-new-description">${category.description}</p>
+                            <p class="category-price">Starting from ${category.startingPrice}</p>
+                            <span class="category-new-cta">
+                                Shop ${category.name}
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </span>
+                        </div>
+                        <div class="category-new-image">
+                            <img src="${category.image}" alt="${category.name}" loading="lazy" />
+                        </div>
+                    </div>
+                </a>
+            `).join('');
+        } else {
+            categoriesGrid.innerHTML = '<div class="loading">No categories available</div>';
+        }
+    } catch (error) {
+        console.error('Error loading categories:', error);
+        categoriesGrid.innerHTML = '<div class="loading">Unable to load categories</div>';
+    }
+}
+
 // Mount Options Unified Slider Functionality
 function initMountSlider() {
     const slides = document.querySelectorAll('.mount-slide');
@@ -209,5 +250,6 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCartCount();
     setupEmailForm();
     loadPopularPrices();
+    loadCategories();
     initMountSlider();
 });

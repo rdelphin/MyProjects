@@ -16,6 +16,7 @@ const DATA_FILE = path.join(__dirname, 'data', 'frames.json');
 const MOUNTS_FILE = path.join(__dirname, 'data', 'mounts.json');
 const ORDERS_FILE = path.join(__dirname, 'data', 'orders.json');
 const DOWNLOADS_FILE = path.join(__dirname, 'data', 'downloads.json');
+const CATEGORIES_FILE = path.join(__dirname, 'data', 'categories.json');
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads', 'mounts');
 
 // Configure multer for file uploads
@@ -131,6 +132,28 @@ async function writeMountsData(data) {
         return true;
     } catch (error) {
         console.error('Error writing mounts data:', error);
+        return false;
+    }
+}
+
+// Helper function to read categories data
+async function readCategoriesData() {
+    try {
+        const data = await fs.readFile(CATEGORIES_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Error reading categories data:', error);
+        return { categories: [] };
+    }
+}
+
+// Helper function to write categories data
+async function writeCategoriesData(data) {
+    try {
+        await fs.writeFile(CATEGORIES_FILE, JSON.stringify(data, null, 2), 'utf8');
+        return true;
+    } catch (error) {
+        console.error('Error writing categories data:', error);
         return false;
     }
 }
@@ -561,6 +584,170 @@ app.patch('/api/admin/frames/:id/availability', requireAdmin, async (req, res) =
         }
     } catch (error) {
         res.status(500).json({ success: false, error: 'Failed to update frame availability' });
+    }
+});
+
+// CATEGORY ROUTES
+
+// Get all active categories (public)
+app.get('/api/categories', async (req, res) => {
+    try {
+        const data = await readCategoriesData();
+        const activeCategories = data.categories
+            .filter(cat => cat.active)
+            .sort((a, b) => a.order - b.order);
+        res.json({ success: true, categories: activeCategories });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to fetch categories' });
+    }
+});
+
+// Get all categories (admin)
+app.get('/api/admin/categories', requireAdmin, async (req, res) => {
+    try {
+        const data = await readCategoriesData();
+        res.json({ success: true, categories: data.categories });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to fetch categories' });
+    }
+});
+
+// Add a new category (admin)
+app.post('/api/admin/categories', requireAdmin, async (req, res) => {
+    try {
+        const { id, name, description, startingPrice, image, link, order, active } = req.body;
+        
+        // Validate input
+        if (!id || !name || !description) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Missing required fields: id, name, description' 
+            });
+        }
+        
+        const data = await readCategoriesData();
+        
+        // Check if category with this ID already exists
+        const existingCategory = data.categories.find(c => c.id === id);
+        if (existingCategory) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Category with this ID already exists' 
+            });
+        }
+        
+        // Create new category
+        const newCategory = {
+            id,
+            name,
+            description,
+            startingPrice: startingPrice || '$0.00',
+            image: image || 'images/placeholder.jpg',
+            link: link || `${id}.html`,
+            order: order !== undefined ? parseInt(order) : data.categories.length + 1,
+            active: active !== undefined ? active : true
+        };
+        
+        data.categories.push(newCategory);
+        
+        // Sort categories by order
+        data.categories.sort((a, b) => a.order - b.order);
+        
+        const success = await writeCategoriesData(data);
+        
+        if (success) {
+            res.json({ success: true, category: newCategory });
+        } else {
+            res.status(500).json({ success: false, error: 'Failed to save category' });
+        }
+    } catch (error) {
+        console.error('Error adding category:', error);
+        res.status(500).json({ success: false, error: 'Failed to add category' });
+    }
+});
+
+// Update a category (admin)
+app.put('/api/admin/categories/:id', requireAdmin, async (req, res) => {
+    try {
+        const { name, description, startingPrice, image, link, order, active } = req.body;
+        const data = await readCategoriesData();
+        
+        const categoryIndex = data.categories.findIndex(c => c.id === req.params.id);
+        
+        if (categoryIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Category not found' });
+        }
+        
+        // Update category
+        if (name !== undefined) data.categories[categoryIndex].name = name;
+        if (description !== undefined) data.categories[categoryIndex].description = description;
+        if (startingPrice !== undefined) data.categories[categoryIndex].startingPrice = startingPrice;
+        if (image !== undefined) data.categories[categoryIndex].image = image;
+        if (link !== undefined) data.categories[categoryIndex].link = link;
+        if (order !== undefined) data.categories[categoryIndex].order = parseInt(order);
+        if (active !== undefined) data.categories[categoryIndex].active = active;
+        
+        // Re-sort categories by order
+        data.categories.sort((a, b) => a.order - b.order);
+        
+        const success = await writeCategoriesData(data);
+        
+        if (success) {
+            res.json({ success: true, category: data.categories[categoryIndex] });
+        } else {
+            res.status(500).json({ success: false, error: 'Failed to update category' });
+        }
+    } catch (error) {
+        console.error('Error updating category:', error);
+        res.status(500).json({ success: false, error: 'Failed to update category' });
+    }
+});
+
+// Delete a category (admin)
+app.delete('/api/admin/categories/:id', requireAdmin, async (req, res) => {
+    try {
+        const data = await readCategoriesData();
+        const categoryIndex = data.categories.findIndex(c => c.id === req.params.id);
+        
+        if (categoryIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Category not found' });
+        }
+        
+        const deletedCategory = data.categories.splice(categoryIndex, 1)[0];
+        const success = await writeCategoriesData(data);
+        
+        if (success) {
+            res.json({ success: true, category: deletedCategory });
+        } else {
+            res.status(500).json({ success: false, error: 'Failed to delete category' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to delete category' });
+    }
+});
+
+// Toggle category availability (admin)
+app.patch('/api/admin/categories/:id/availability', requireAdmin, async (req, res) => {
+    try {
+        const { active } = req.body;
+        const data = await readCategoriesData();
+        
+        const categoryIndex = data.categories.findIndex(c => c.id === req.params.id);
+        
+        if (categoryIndex === -1) {
+            return res.status(404).json({ success: false, error: 'Category not found' });
+        }
+        
+        data.categories[categoryIndex].active = active;
+        const success = await writeCategoriesData(data);
+        
+        if (success) {
+            res.json({ success: true, category: data.categories[categoryIndex] });
+        } else {
+            res.status(500).json({ success: false, error: 'Failed to update category availability' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to update category availability' });
     }
 });
 
