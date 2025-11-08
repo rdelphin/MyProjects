@@ -75,49 +75,99 @@ function displayCartItems(cart) {
     emptyCartMessage.style.display = 'none';
     itemCount.textContent = cart.length;
     
-    cartItemsContainer.innerHTML = cart.map(item => `
-        <div class="cart-item">
-            <div class="cart-item-image">
-                <img src="${item.previewImage}" alt="Framed Photo ${item.frameSizeName}">
-            </div>
-            
-            <div class="cart-item-details">
-                <div class="cart-item-title">
-                    Framed Photo - ${item.frameSizeName}" ${item.orientation}
+    cartItemsContainer.innerHTML = cart.map(item => {
+        const isClock = item.productType === 'clock';
+        
+        // Determine product title and size display
+        const productTitle = isClock 
+            ? `Custom Clock - ${item.frameSizeName}" Diameter`
+            : `Framed Photo - ${item.frameSizeName}" ${item.orientation}`;
+        
+        // Build specs based on product type
+        let specsHTML = '';
+        if (isClock) {
+            specsHTML = `
+                <div class="cart-item-spec">
+                    <strong>Size:</strong>
+                    <span>${item.frameSizeName}" Diameter</span>
+                </div>
+                <div class="cart-item-spec">
+                    <strong>Clock Hands:</strong>
+                    <span>${item.clockHandsName || 'Standard'}</span>
+                </div>
+                <div class="cart-item-spec">
+                    <strong>Frame Option:</strong>
+                    <span>${item.frameOptionName || 'Standard'}</span>
+                </div>
+                <div class="cart-item-spec">
+                    <strong>Added:</strong>
+                    <span>${new Date(item.addedAt).toLocaleDateString()}</span>
+                </div>
+            `;
+        } else {
+            specsHTML = `
+                <div class="cart-item-spec">
+                    <strong>Frame Size:</strong>
+                    <span>${item.frameSizeName}" (${item.orientation})</span>
+                </div>
+                <div class="cart-item-spec">
+                    <strong>Mount:</strong>
+                    <span>${item.mountName}</span>
+                </div>
+                <div class="cart-item-spec">
+                    <strong>Added:</strong>
+                    <span>${new Date(item.addedAt).toLocaleDateString()}</span>
+                </div>
+            `;
+        }
+        
+        // Build price breakdown
+        let priceBreakdown = '';
+        if (isClock) {
+            priceBreakdown = `
+                Clock: $${item.framePrice.toFixed(2)}<br>
+                ${item.clockHandsPrice > 0 ? `Hands: $${item.clockHandsPrice.toFixed(2)}<br>` : ''}
+                ${item.frameOptionPrice > 0 ? `Frame: $${item.frameOptionPrice.toFixed(2)}` : ''}
+            `;
+        } else {
+            priceBreakdown = `
+                Frame: $${item.framePrice.toFixed(2)}<br>
+                Mount: $${item.mountPrice.toFixed(2)}
+            `;
+        }
+        
+        return `
+            <div class="cart-item">
+                <div class="cart-item-image">
+                    <img src="${item.previewImage}" alt="${productTitle}">
                 </div>
                 
-                <div class="cart-item-specs">
-                    <div class="cart-item-spec">
-                        <strong>Frame Size:</strong>
-                        <span>${item.frameSizeName}" (${item.orientation})</span>
+                <div class="cart-item-details">
+                    <div class="cart-item-title">
+                        ${productTitle}
                     </div>
-                    <div class="cart-item-spec">
-                        <strong>Mount:</strong>
-                        <span>${item.mountName}</span>
+                    
+                    <div class="cart-item-specs">
+                        ${specsHTML}
                     </div>
-                    <div class="cart-item-spec">
-                        <strong>Added:</strong>
-                        <span>${new Date(item.addedAt).toLocaleDateString()}</span>
+                </div>
+                
+                <div class="cart-item-price-section">
+                    <div class="cart-item-price">
+                        $${item.totalPrice.toFixed(2)}
+                    </div>
+                    <div class="cart-item-breakdown">
+                        ${priceBreakdown}
+                    </div>
+                    <div class="cart-item-actions">
+                        <button class="btn-remove" onclick="removeItem(${item.id})">
+                            Remove
+                        </button>
                     </div>
                 </div>
             </div>
-            
-            <div class="cart-item-price-section">
-                <div class="cart-item-price">
-                    $${item.totalPrice.toFixed(2)}
-                </div>
-                <div class="cart-item-breakdown">
-                    Frame: $${item.framePrice.toFixed(2)}<br>
-                    Mount: $${item.mountPrice.toFixed(2)}
-                </div>
-                <div class="cart-item-actions">
-                    <button class="btn-remove" onclick="removeItem(${item.id})">
-                        Remove
-                    </button>
-                </div>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Load and display cart
@@ -142,23 +192,40 @@ function handleCheckout() {
     
     // Create checkout data WITHOUT the large imageData field
     // (we'll include it when submitting to backend, not in localStorage)
-    const checkoutItems = cart.map(item => ({
-        id: item.id,
-        frameSize: item.frameSize,
-        frameSizeName: item.frameSizeName,
-        framePrice: item.framePrice,
-        mountId: item.mountId,
-        mountName: item.mountName,
-        mountPrice: item.mountPrice,
-        orientation: item.orientation,
-        zoom: item.zoom,
-        position: item.position,
-        previewImage: item.previewImage,  // Keep preview (smaller)
-        totalPrice: item.totalPrice,
-        addedAt: item.addedAt
-        // NOTE: imageData is NOT included here to avoid localStorage quota
-        // It will be retrieved from original cart when submitting order
-    }));
+    const checkoutItems = cart.map(item => {
+        const baseItem = {
+            id: item.id,
+            frameSize: item.frameSize,
+            frameSizeName: item.frameSizeName,
+            framePrice: item.framePrice,
+            orientation: item.orientation,
+            zoom: item.zoom,
+            position: item.position,
+            previewImage: item.previewImage,  // Keep preview (smaller)
+            totalPrice: item.totalPrice,
+            addedAt: item.addedAt,
+            productType: item.productType || 'frame'
+            // NOTE: imageData is NOT included here to avoid localStorage quota
+            // It will be retrieved from original cart when submitting order
+        };
+        
+        // Add clock-specific fields if it's a clock
+        if (item.productType === 'clock') {
+            if (item.clockHandsId) baseItem.clockHandsId = item.clockHandsId;
+            if (item.clockHandsName) baseItem.clockHandsName = item.clockHandsName;
+            if (item.clockHandsPrice) baseItem.clockHandsPrice = item.clockHandsPrice;
+            if (item.frameOptionId) baseItem.frameOptionId = item.frameOptionId;
+            if (item.frameOptionName) baseItem.frameOptionName = item.frameOptionName;
+            if (item.frameOptionPrice) baseItem.frameOptionPrice = item.frameOptionPrice;
+        } else {
+            // Add frame-specific fields
+            if (item.mountId) baseItem.mountId = item.mountId;
+            if (item.mountName) baseItem.mountName = item.mountName;
+            if (item.mountPrice) baseItem.mountPrice = item.mountPrice;
+        }
+        
+        return baseItem;
+    });
     
     try {
         // Save lightweight checkout data to localStorage

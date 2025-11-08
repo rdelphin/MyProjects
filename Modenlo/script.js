@@ -679,6 +679,11 @@ function init() {
     // Toggle section visibility based on product type
     toggleSectionVisibility();
     
+    // Initialize MOUNT_OPTIONS with default for all cases
+    MOUNT_OPTIONS = {
+        'no-mount': { name: 'No Mount', description: 'Standard frame without mount', price: 0.00 }
+    };
+    
     // Load frames/clocks and mounts from API based on product type
     if (isClock()) {
         loadClocks();
@@ -763,12 +768,21 @@ function handleOrientationSelectChange(e) {
 function calculateEffectiveDPI(imageWidth, imageHeight, frameSize, orientation) {
     const dimensions = getFrameDimensions(frameSize, orientation);
     
-    // Calculate physical dimensions in inches
-    const frameSizeParts = frameSize.split('x');
-    const physicalWidth = orientation === 'portrait' ? 
-        parseInt(frameSizeParts[0]) : parseInt(frameSizeParts[1]);
-    const physicalHeight = orientation === 'portrait' ? 
-        parseInt(frameSizeParts[1]) : parseInt(frameSizeParts[0]);
+    let physicalWidth, physicalHeight;
+    
+    // For clocks (circular), use diameter for both dimensions
+    if (isClock()) {
+        const diameter = parseFloat(frameSize);
+        physicalWidth = diameter;
+        physicalHeight = diameter;
+    } else {
+        // For regular frames, split by 'x'
+        const frameSizeParts = frameSize.split('x');
+        physicalWidth = orientation === 'portrait' ? 
+            parseInt(frameSizeParts[0]) : parseInt(frameSizeParts[1]);
+        physicalHeight = orientation === 'portrait' ? 
+            parseInt(frameSizeParts[1]) : parseInt(frameSizeParts[0]);
+    }
     
     // Calculate DPI for both dimensions
     const dpiWidth = imageWidth / physicalWidth;
@@ -800,12 +814,24 @@ function showResolutionWarning(currentDPI) {
     const img = state.uploadedImage;
     const dimensions = getFrameDimensions(state.frameSize, state.orientation);
     
-    // Calculate recommended minimum resolution
-    const frameSizeParts = state.frameSize.split('x');
-    const physicalWidth = state.orientation === 'portrait' ? 
-        parseInt(frameSizeParts[0]) : parseInt(frameSizeParts[1]);
-    const physicalHeight = state.orientation === 'portrait' ? 
-        parseInt(frameSizeParts[1]) : parseInt(frameSizeParts[0]);
+    let physicalWidth, physicalHeight;
+    let sizeLabel;
+    
+    // For clocks (circular), use diameter
+    if (isClock()) {
+        const diameter = parseFloat(state.frameSize);
+        physicalWidth = diameter;
+        physicalHeight = diameter;
+        sizeLabel = `${state.frameSize}" diameter clock`;
+    } else {
+        // For regular frames, split by 'x'
+        const frameSizeParts = state.frameSize.split('x');
+        physicalWidth = state.orientation === 'portrait' ? 
+            parseInt(frameSizeParts[0]) : parseInt(frameSizeParts[1]);
+        physicalHeight = state.orientation === 'portrait' ? 
+            parseInt(frameSizeParts[1]) : parseInt(frameSizeParts[0]);
+        sizeLabel = `${state.frameSize}" ${state.orientation} frame`;
+    }
     
     const recommendedWidth = physicalWidth * MIN_DPI;
     const recommendedHeight = physicalHeight * MIN_DPI;
@@ -814,16 +840,16 @@ function showResolutionWarning(currentDPI) {
     const suggestedSizes = findSuitableFrameSizes(img.width, img.height, state.orientation);
     
     let message = `Your image resolution is ${Math.round(currentDPI)} DPI, which is below the recommended ${MIN_DPI} DPI for print quality. `;
-    message += `This may result in a pixelated or blurry print for the selected ${state.frameSize}" ${state.orientation} frame.<br><br>`;
+    message += `This may result in a pixelated or blurry print for the selected ${sizeLabel}.<br><br>`;
     message += `<strong>Current image:</strong> ${img.width} × ${img.height} pixels<br>`;
-    message += `<strong>Recommended for ${state.frameSize}":</strong> ${recommendedWidth} × ${recommendedHeight} pixels (${MIN_DPI} DPI)<br><br>`;
+    message += `<strong>Recommended for ${state.frameSize}":</strong> ${Math.round(recommendedWidth)} × ${Math.round(recommendedHeight)} pixels (${MIN_DPI} DPI)<br><br>`;
     
     if (suggestedSizes.length > 0) {
         message += `<strong>Suggestions:</strong><br>`;
-        message += `• Upload a higher-resolution image (at least ${recommendedWidth} × ${recommendedHeight} pixels)<br>`;
-        message += `• Choose a smaller frame size: ${suggestedSizes.join(', ')}`;
+        message += `• Upload a higher-resolution image (at least ${Math.round(recommendedWidth)} × ${Math.round(recommendedHeight)} pixels)<br>`;
+        message += `• Choose a smaller ${isClock() ? 'clock' : 'frame'} size: ${suggestedSizes.join(', ')}`;
     } else {
-        message += `<strong>Suggestion:</strong> Upload a higher-resolution image (at least ${recommendedWidth} × ${recommendedHeight} pixels)`;
+        message += `<strong>Suggestion:</strong> Upload a higher-resolution image (at least ${Math.round(recommendedWidth)} × ${Math.round(recommendedHeight)} pixels)`;
     }
     
     warningMessage.innerHTML = message;
@@ -995,6 +1021,16 @@ function uploadNew() {
 // Frame controls
 function handleFrameSizeChange(e) {
     state.frameSize = e.target.value;
+    
+    // For clocks: reload hands and frame options when size changes
+    if (isClock() && FRAME_SIZES[state.frameSize]) {
+        state.currentClockData = FRAME_SIZES[state.frameSize].clockData;
+        if (state.currentClockData) {
+            loadClockHands(state.currentClockData);
+            loadClockFrameOptions(state.currentClockData);
+        }
+    }
+    
     updateCanvas();
     
     // Update price display
@@ -1491,7 +1527,21 @@ function addToCart(e) {
     
     // Generate the FINAL framed image (this is what user will download)
     const finalCanvas = generateFinalImage();
-    const finalImageData = finalCanvas.toDataURL('image/png', 1.0);
+    
+    // Create a medium-quality version for cart storage (to avoid quota issues)
+    const mediumCanvas = document.createElement('canvas');
+    const mediumCtx = mediumCanvas.getContext('2d');
+    
+    // Use 800px max dimension for cart storage
+    const maxDimension = 800;
+    const dimensions = getFrameDimensions(state.frameSize, state.orientation);
+    const scale = Math.min(maxDimension / dimensions.width, maxDimension / dimensions.height);
+    
+    mediumCanvas.width = dimensions.width * scale;
+    mediumCanvas.height = dimensions.height * scale;
+    
+    mediumCtx.drawImage(finalCanvas, 0, 0, mediumCanvas.width, mediumCanvas.height);
+    const finalImageData = mediumCanvas.toDataURL('image/jpeg', 0.8);
     
     // Generate preview thumbnail
     const previewCanvas = document.createElement('canvas');
@@ -1500,7 +1550,6 @@ function addToCart(e) {
     previewCanvas.height = 200;
     
     // Draw scaled preview of the final image
-    const dimensions = getFrameDimensions(state.frameSize, state.orientation);
     const aspect = dimensions.width / dimensions.height;
     
     let previewWidth, previewHeight;
@@ -1517,10 +1566,9 @@ function addToCart(e) {
     
     previewCtx.fillStyle = 'white';
     previewCtx.fillRect(0, 0, 200, 200);
-    // Draw from the final canvas instead of original image
-    previewCtx.drawImage(finalCanvas, offsetX, offsetY, previewWidth, previewHeight);
+    previewCtx.drawImage(mediumCanvas, offsetX, offsetY, previewWidth, previewHeight);
     
-    const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.7);
+    const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
     
     // Calculate total price
     let totalPrice = FRAME_SIZES[state.frameSize] ? FRAME_SIZES[state.frameSize].price : 0;

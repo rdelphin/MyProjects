@@ -123,7 +123,7 @@ function displayOrders() {
                         </td>
                         <td>${new Date(order.createdAt).toLocaleDateString()}</td>
                         <td>
-                            <button onclick="viewOrder('${order.orderId}')" class="btn-small">
+                            <button data-order-id="${order.orderId}" class="btn-small btn-view-order">
                                 View Details
                             </button>
                         </td>
@@ -132,6 +132,14 @@ function displayOrders() {
             </tbody>
         </table>
     `;
+    
+    // Attach event listeners to all View Details buttons
+    document.querySelectorAll('.btn-view-order').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-order-id');
+            viewOrder(orderId);
+        });
+    });
 }
 
 // View order details
@@ -190,17 +198,48 @@ async function viewOrder(orderId) {
 
         <div class="order-detail-section">
             <h3>Order Items</h3>
-            ${order.order.items.map((item, index) => `
-                <div class="order-item-detail">
-                    <div class="item-header">
-                        <h4>Item ${index + 1}</h4>
-                        <div class="item-actions">
-                            <button onclick="downloadImage('${orderId}', ${index})" class="btn-primary">
-                                📥 Download High-Res Image
-                            </button>
+            ${order.order.items.map((item, index) => {
+                const isClock = item.productType === 'clock';
+                
+                // Build specifications based on product type
+                let specsHTML = '';
+                if (isClock) {
+                    specsHTML = `
+                        <div class="spec-row">
+                            <strong>Product:</strong>
+                            <span>Custom Clock - ${item.frameSizeName}" Diameter</span>
                         </div>
-                    </div>
-                    <div class="item-specs">
+                        <div class="spec-row">
+                            <strong>Clock Hands:</strong>
+                            <span>${item.clockHandsName || 'Standard'}</span>
+                        </div>
+                        <div class="spec-row">
+                            <strong>Frame Option:</strong>
+                            <span>${item.frameOptionName || 'Standard'}</span>
+                        </div>
+                        <div class="spec-row">
+                            <strong>Clock Price:</strong>
+                            <span>$${item.framePrice.toFixed(2)}</span>
+                        </div>
+                        ${item.clockHandsPrice > 0 ? `
+                            <div class="spec-row">
+                                <strong>Hands Price:</strong>
+                                <span>$${item.clockHandsPrice.toFixed(2)}</span>
+                            </div>
+                        ` : ''}
+                        ${item.frameOptionPrice > 0 ? `
+                            <div class="spec-row">
+                                <strong>Frame Price:</strong>
+                                <span>$${item.frameOptionPrice.toFixed(2)}</span>
+                            </div>
+                        ` : ''}
+                        <div class="spec-row">
+                            <strong>Item Total:</strong>
+                            <span>$${item.totalPrice.toFixed(2)}</span>
+                        </div>
+                    `;
+                } else {
+                    specsHTML = `
                         <div class="spec-row">
                             <strong>Frame:</strong>
                             <span>${item.frameSizeName}" ${item.orientation}</span>
@@ -221,14 +260,30 @@ async function viewOrder(orderId) {
                             <strong>Item Total:</strong>
                             <span>$${item.totalPrice.toFixed(2)}</span>
                         </div>
-                    </div>
-                    ${item.previewImage ? `
-                        <div class="item-preview">
-                            <img src="${item.previewImage}" alt="Preview" style="max-width: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                    `;
+                }
+                
+                return `
+                    <div class="order-item-detail">
+                        <div class="item-header">
+                            <h4>Item ${index + 1} ${isClock ? '(Clock)' : '(Frame)'}</h4>
+                            <div class="item-actions">
+                                <button onclick="downloadImage('${orderId}', ${index})" class="btn-primary">
+                                    📥 Download High-Res Image
+                                </button>
+                            </div>
                         </div>
-                    ` : ''}
-                </div>
-            `).join('')}
+                        <div class="item-specs">
+                            ${specsHTML}
+                        </div>
+                        ${item.previewImage ? `
+                            <div class="item-preview">
+                                <img src="${item.previewImage}" alt="Preview" style="max-width: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('')}
         </div>
 
         <div class="order-detail-section">

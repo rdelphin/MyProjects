@@ -78,22 +78,19 @@
           "id": "classic",
           "name": "Classic",
           "description": "Traditional clock hands",
-          "price": 0,
-          "thumbnail": ""
+          "price": 0
         },
         {
           "id": "modern",
           "name": "Modern",
           "description": "Sleek modern design",
-          "price": 5,
-          "thumbnail": ""
+          "price": 5
         },
         {
           "id": "vintage",
           "name": "Vintage",
           "description": "Antique style hands",
-          "price": 7.5,
-          "thumbnail": ""
+          "price": 7.5
         }
       ],
       "frames": [
@@ -101,22 +98,19 @@
           "id": "wooden",
           "name": "Wooden Frame",
           "description": "Natural wood finish",
-          "price": 10,
-          "thumbnail": ""
+          "price": 10
         },
         {
           "id": "metal",
           "name": "Metal Frame",
           "description": "Brushed metal finish",
-          "price": 12,
-          "thumbnail": ""
+          "price": 12
         },
         {
           "id": "plastic",
           "name": "Plastic Frame",
           "description": "Lightweight plastic",
-          "price": 5,
-          "thumbnail": ""
+          "price": 5
         }
       ]
     }
