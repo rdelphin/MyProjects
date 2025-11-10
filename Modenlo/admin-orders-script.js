@@ -132,14 +132,6 @@ function displayOrders() {
             </tbody>
         </table>
     `;
-    
-    // Attach event listeners to all View Details buttons
-    document.querySelectorAll('.btn-view-order').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const orderId = this.getAttribute('data-order-id');
-            viewOrder(orderId);
-        });
-    });
 }
 
 // View order details
@@ -239,26 +231,38 @@ async function viewOrder(orderId) {
                         </div>
                     `;
                 } else {
+                    // Handle frames with optional mount selection
+                    const hasMountSelected = item.mountName && item.mountName !== 'No Mount' && item.mountName !== 'None';
+                    
                     specsHTML = `
                         <div class="spec-row">
                             <strong>Frame:</strong>
-                            <span>${item.frameSizeName}" ${item.orientation}</span>
+                            <span>${item.frameSizeName}" ${item.orientation || 'portrait'}</span>
                         </div>
-                        <div class="spec-row">
-                            <strong>Mount:</strong>
-                            <span>${item.mountName}</span>
-                        </div>
+                        ${hasMountSelected ? `
+                            <div class="spec-row">
+                                <strong>Mount:</strong>
+                                <span>${item.mountName}</span>
+                            </div>
+                        ` : `
+                            <div class="spec-row">
+                                <strong>Mount:</strong>
+                                <span>No Mount Selected</span>
+                            </div>
+                        `}
                         <div class="spec-row">
                             <strong>Frame Price:</strong>
-                            <span>$${item.framePrice.toFixed(2)}</span>
+                            <span>$${(item.framePrice || 0).toFixed(2)}</span>
                         </div>
-                        <div class="spec-row">
-                            <strong>Mount Price:</strong>
-                            <span>$${item.mountPrice.toFixed(2)}</span>
-                        </div>
+                        ${hasMountSelected && item.mountPrice > 0 ? `
+                            <div class="spec-row">
+                                <strong>Mount Price:</strong>
+                                <span>$${item.mountPrice.toFixed(2)}</span>
+                            </div>
+                        ` : ''}
                         <div class="spec-row">
                             <strong>Item Total:</strong>
-                            <span>$${item.totalPrice.toFixed(2)}</span>
+                            <span>$${(item.totalPrice || 0).toFixed(2)}</span>
                         </div>
                     `;
                 }
@@ -268,7 +272,7 @@ async function viewOrder(orderId) {
                         <div class="item-header">
                             <h4>Item ${index + 1} ${isClock ? '(Clock)' : '(Frame)'}</h4>
                             <div class="item-actions">
-                                <button onclick="downloadImage('${orderId}', ${index})" class="btn-primary">
+                                <button onclick="downloadImage('${orderId}', ${index}, this)" class="btn-primary">
                                     📥 Download High-Res Image
                                 </button>
                             </div>
@@ -313,7 +317,7 @@ async function viewOrder(orderId) {
 }
 
 // Download high-res image
-async function downloadImage(orderId, itemIndex) {
+async function downloadImage(orderId, itemIndex, buttonElement) {
     try {
         const order = allOrders.find(o => o.orderId === orderId);
         if (!order || !order.order.items[itemIndex]) {
@@ -324,7 +328,7 @@ async function downloadImage(orderId, itemIndex) {
         const item = order.order.items[itemIndex];
         
         // Show loading message
-        const btn = event.target;
+        const btn = buttonElement;
         const originalText = btn.textContent;
         btn.disabled = true;
         btn.textContent = '⏳ Generating...';
@@ -341,65 +345,97 @@ async function downloadImage(orderId, itemIndex) {
         // Create image from data URL
         const img = new Image();
         img.onload = function() {
-            // Create canvas for output
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+            try {
+                // Create canvas for output
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
 
-            // Get frame dimensions based on orientation
-            const frameSizeParts = item.frameSize.split('x');
-            const baseWidth = parseInt(frameSizeParts[0]) * 300; // 300 DPI
-            const baseHeight = parseInt(frameSizeParts[1]) * 300;
+                const isClock = item.productType === 'clock';
+                let filename;
 
-            if (item.orientation === 'landscape') {
-                canvas.width = baseHeight;
-                canvas.height = baseWidth;
-            } else {
-                canvas.width = baseWidth;
-                canvas.height = baseHeight;
-            }
+                if (isClock) {
+                    // For clocks: circular, use diameter
+                    const diameter = parseInt(item.frameSizeName) * 300; // 300 DPI
+                    canvas.width = diameter;
+                    canvas.height = diameter;
+                    filename = `${orderId}-item${itemIndex + 1}-clock-${item.frameSizeName}in.png`;
+                } else {
+                    // For frames: rectangular, use frameSize and orientation
+                    const frameSizeParts = item.frameSize.split('x');
+                    const baseWidth = parseInt(frameSizeParts[0]) * 300; // 300 DPI
+                    const baseHeight = parseInt(frameSizeParts[1]) * 300;
 
-            // Fill with white background
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    if (item.orientation === 'landscape') {
+                        canvas.width = baseHeight;
+                        canvas.height = baseWidth;
+                    } else {
+                        canvas.width = baseWidth;
+                        canvas.height = baseHeight;
+                    }
+                    filename = `${orderId}-item${itemIndex + 1}-${item.frameSize}-${item.orientation}.png`;
+                }
 
-            // Draw image (simplified - in production you'd apply zoom and position)
-            const aspect = img.width / img.height;
-            const canvasAspect = canvas.width / canvas.height;
+                // Fill with white background
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            let drawWidth, drawHeight, offsetX, offsetY;
+                // Draw image
+                const aspect = img.width / img.height;
+                const canvasAspect = canvas.width / canvas.height;
 
-            if (aspect > canvasAspect) {
-                // Image is wider
-                drawHeight = canvas.height;
-                drawWidth = drawHeight * aspect;
-                offsetX = (canvas.width - drawWidth) / 2;
-                offsetY = 0;
-            } else {
-                // Image is taller
-                drawWidth = canvas.width;
-                drawHeight = drawWidth / aspect;
-                offsetX = 0;
-                offsetY = (canvas.height - drawHeight) / 2;
-            }
+                let drawWidth, drawHeight, offsetX, offsetY;
 
-            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+                if (aspect > canvasAspect) {
+                    // Image is wider
+                    drawHeight = canvas.height;
+                    drawWidth = drawHeight * aspect;
+                    offsetX = (canvas.width - drawWidth) / 2;
+                    offsetY = 0;
+                } else {
+                    // Image is taller
+                    drawWidth = canvas.width;
+                    drawHeight = drawWidth / aspect;
+                    offsetX = 0;
+                    offsetY = (canvas.height - drawHeight) / 2;
+                }
 
-            // Download
-            const filename = `${orderId}-item${itemIndex + 1}-${item.frameSize}-${item.orientation}.png`;
-            canvas.toBlob(function(blob) {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
 
+                // Download
+                canvas.toBlob(function(blob) {
+                    if (!blob) {
+                        alert('Error creating image blob');
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                        return;
+                    }
+                    
+                    try {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                        alert('Image downloaded successfully!');
+                    } catch (error) {
+                        console.error('Download error:', error);
+                        alert('Error downloading image: ' + error.message);
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                }, 'image/png');
+            } catch (error) {
+                console.error('Canvas error:', error);
+                alert('Error generating image: ' + error.message);
                 btn.disabled = false;
                 btn.textContent = originalText;
-                alert('Image downloaded successfully!');
-            }, 'image/png');
+            }
         };
 
         img.onerror = function() {
@@ -479,6 +515,74 @@ statusFilter.addEventListener('change', filterOrders);
 searchInput.addEventListener('input', filterOrders);
 refreshBtn.addEventListener('click', loadOrders);
 logoutBtn.addEventListener('click', logout);
+
+// Event delegation for View Details buttons - ENHANCED with comprehensive debugging
+ordersContainer.addEventListener('click', (e) => {
+    console.log('=== CLICK EVENT DEBUG ===');
+    console.log('Target element:', e.target);
+    console.log('Target tag:', e.target.tagName);
+    console.log('Target classes:', e.target.className);
+    console.log('Target parent:', e.target.parentElement);
+    
+    // Approach 1: Check if the clicked element is the button itself
+    let button = null;
+    
+    if (e.target.classList.contains('btn-view-order')) {
+        button = e.target;
+        console.log('✓ Method 1: Direct button click detected');
+    } else {
+        // Approach 2: Check if we clicked inside a button (find closest button)
+        button = e.target.closest('.btn-view-order');
+        if (button) {
+            console.log('✓ Method 2: Found button via closest()');
+        } else {
+            console.log('✗ No button found via either method');
+            
+            // Approach 3: Manual parent traversal for debugging
+            let current = e.target;
+            let depth = 0;
+            while (current && depth < 10) {
+                console.log(`  Level ${depth}:`, current.tagName, current.className);
+                if (current.classList && current.classList.contains('btn-view-order')) {
+                    button = current;
+                    console.log('✓ Method 3: Found button via manual traversal at depth', depth);
+                    break;
+                }
+                current = current.parentElement;
+                depth++;
+            }
+        }
+    }
+    
+    if (button) {
+        console.log('✓ BUTTON FOUND:', button);
+        console.log('  Button classes:', button.className);
+        console.log('  Button attributes:', Array.from(button.attributes).map(a => `${a.name}="${a.value}"`));
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const orderId = button.getAttribute('data-order-id');
+        console.log('  Order ID:', orderId);
+        
+        if (orderId) {
+            console.log('✓ Calling viewOrder with ID:', orderId);
+            try {
+                viewOrder(orderId);
+                console.log('✓ viewOrder executed successfully');
+            } catch (error) {
+                console.error('✗ ERROR in viewOrder:', error);
+                alert('Error opening order details: ' + error.message);
+            }
+        } else {
+            console.error('✗ No order ID found on button:', button);
+            alert('Error: No order ID found on button');
+        }
+    } else {
+        console.log('✗ BUTTON NOT FOUND - Click ignored');
+    }
+    console.log('=== END CLICK DEBUG ===\n');
+}, true); // Using capture phase
 
 modalClose.addEventListener('click', () => {
     orderModal.style.display = 'none';

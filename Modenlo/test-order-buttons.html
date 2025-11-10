@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Order Buttons</title>
+    <link rel="stylesheet" href="admin-style.css">
+    <style>
+        body {
+            padding: 20px;
+            background: white;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+        }
+        .debug-log {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Order Button Click Test</h1>
+        <p>Click the "View Details" buttons below to test the event delegation.</p>
+
+        <div class="test-section">
+            <h2>Test Table (Similar to Admin Orders)</h2>
+            <div id="testOrdersContainer">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Product Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ORD-001</strong></td>
+                            <td>John Doe<br><small>john@example.com</small></td>
+                            <td>Wall Display</td>
+                            <td>
+                                <button data-order-id="ORD-001" class="btn-small btn-view-order">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>ORD-002</strong></td>
+                            <td>Jane Smith<br><small>jane@example.com</small></td>
+                            <td>Mouse Pad</td>
+                            <td>
+                                <button data-order-id="ORD-002" class="btn-small btn-view-order">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>ORD-003</strong></td>
+                            <td>Bob Johnson<br><small>bob@example.com</small></td>
+                            <td>Tabletop Display</td>
+                            <td>
+                                <button data-order-id="ORD-003" class="btn-small btn-view-order">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>ORD-004</strong></td>
+                            <td>Alice Williams<br><small>alice@example.com</small></td>
+                            <td>Clock</td>
+                            <td>
+                                <button data-order-id="ORD-004" class="btn-small btn-view-order">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>Debug Log</h2>
+            <button onclick="clearLog()" class="btn-secondary">Clear Log</button>
+            <div id="debugLog" class="debug-log">
+                <div class="log-entry">Click any "View Details" button above...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const testContainer = document.getElementById('testOrdersContainer');
+        const debugLog = document.getElementById('debugLog');
+
+        function log(message) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            debugLog.appendChild(entry);
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+
+        function clearLog() {
+            debugLog.innerHTML = '<div class="log-entry">Log cleared. Click any "View Details" button...</div>';
+        }
+
+        // Log all clicks on the container
+        testContainer.addEventListener('click', (e) => {
+            log(`Click detected on: ${e.target.tagName} with classes: ${e.target.className}`);
+            
+            // Find the button element
+            let button = null;
+            
+            if (e.target.classList.contains('btn-view-order')) {
+                button = e.target;
+                log('✓ Direct click on button');
+            } else {
+                button = e.target.closest('.btn-view-order');
+                if (button) {
+                    log('✓ Found button via closest()');
+                } else {
+                    log('✗ Button not found');
+                }
+            }
+            
+            if (button) {
+                e.preventDefault();
+                e.stopPropagation();
+                const orderId = button.getAttribute('data-order-id');
+                log(`✓ Order ID: ${orderId}`);
+                log(`✓ SUCCESS: Would open details for ${orderId}`);
+                alert(`Details opened for Order: ${orderId}`);
+            } else {
+                log('✗ FAILED: No button found in event path');
+            }
+        }, true); // Using capture phase to ensure we catch it
+
+        log('Event delegation initialized');
+    </script>
+</body>
+</html>

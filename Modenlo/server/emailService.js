@@ -165,7 +165,7 @@ async function sendAdminNotification(orderData, orderId) {
 
     const { contact, shipping, order } = orderData;
     const downloadToken = generateDownloadToken();
-    const downloadLink = `http://localhost:3000/api/download/${orderId}/${downloadToken}`;
+    const downloadLink = `http://localhost:3000/download/${orderId}/${downloadToken}`;
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
     const items = order.items.map((item, index) => {

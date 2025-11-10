@@ -1072,7 +1072,347 @@ app.patch('/api/admin/orders/:orderId/status', requireAdmin, async (req, res) =>
     }
 });
 
-// Download endpoint with token
+// Download page endpoint (shows HTML page for downloading images)
+app.get('/download/:orderId/:token', async (req, res) => {
+    try {
+        const { orderId, token } = req.params;
+        
+        // Read downloads data
+        const downloadsFile = await readDownloadsData();
+        const download = downloadsFile.downloads.find(d => d.orderId === orderId && d.token === token);
+        
+        if (!download) {
+            return res.send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Download Error - Modenlo</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
+                        .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="error">
+                        <h2>Invalid Download Link</h2>
+                        <p>This download link is invalid or has been removed.</p>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+        
+        // Check if expired
+        if (new Date(download.expiresAt) < new Date()) {
+            return res.send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Download Error - Modenlo</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
+                        .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="error">
+                        <h2>Link Expired</h2>
+                        <p>This download link expired on ${new Date(download.expiresAt).toLocaleString()}.</p>
+                        <p>Please contact support for assistance.</p>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+        
+        // Get order data
+        const ordersFile = await readOrdersData();
+        const order = ordersFile.orders.find(o => o.orderId === orderId);
+        
+        if (!order) {
+            return res.send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Download Error - Modenlo</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center; }
+                        .error { background: #f8d7da; color: #721c24; padding: 20px; border-radius: 8px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="error">
+                        <h2>Order Not Found</h2>
+                        <p>The order associated with this download link could not be found.</p>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+        
+        // Send download page HTML
+        const downloadPageHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Download High-Res Images - Order ${orderId}</title>
+                <style>
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body {
+                        font-family: Arial, sans-serif;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        padding: 20px;
+                        min-height: 100vh;
+                    }
+                    .container {
+                        max-width: 900px;
+                        margin: 0 auto;
+                        background: white;
+                        border-radius: 15px;
+                        padding: 40px;
+                        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+                    }
+                    h1 { color: #667eea; margin-bottom: 10px; }
+                    .order-id { color: #666; margin-bottom: 30px; font-size: 0.9rem; }
+                    .item-card {
+                        background: #f8f9ff;
+                        padding: 20px;
+                        margin-bottom: 20px;
+                        border-radius: 10px;
+                        border: 2px solid #e0e0e0;
+                    }
+                    .item-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 15px;
+                        padding-bottom: 15px;
+                        border-bottom: 2px solid #e0e0e0;
+                    }
+                    .item-header h3 { color: #333; }
+                    .btn-download {
+                        background: #28a745;
+                        color: white;
+                        padding: 12px 24px;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: all 0.3s;
+                    }
+                    .btn-download:hover { background: #218838; transform: translateY(-2px); }
+                    .btn-download:disabled {
+                        background: #6c757d;
+                        cursor: not-allowed;
+                        transform: none;
+                    }
+                    .item-specs {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                        gap: 10px;
+                        margin-bottom: 15px;
+                    }
+                    .spec-row {
+                        display: flex;
+                        justify-content: space-between;
+                        padding: 8px 0;
+                        border-bottom: 1px solid #e0e0e0;
+                    }
+                    .spec-row strong { color: #333; }
+                    .spec-row span { color: #666; }
+                    .preview { text-align: center; margin-top: 15px; }
+                    .preview img {
+                        max-width: 300px;
+                        border: 2px solid #ddd;
+                        border-radius: 8px;
+                    }
+                    .warning {
+                        background: #fff3cd;
+                        border: 2px solid #ffc107;
+                        color: #856404;
+                        padding: 15px;
+                        border-radius: 8px;
+                        margin-bottom: 30px;
+                    }
+                    .success-message {
+                        background: #d4edda;
+                        color: #155724;
+                        padding: 10px;
+                        border-radius: 6px;
+                        margin-top: 10px;
+                        display: none;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>🖼️ Download High-Resolution Images</h1>
+                    <p class="order-id">Order ID: ${orderId}</p>
+                    
+                    <div class="warning">
+                        <strong>⚠️ Important:</strong> Each image can only be downloaded once. Make sure to save them to a secure location.
+                        This link expires on <strong>${new Date(download.expiresAt).toLocaleString()}</strong>.
+                    </div>
+                    
+                    ${order.order.items.map((item, index) => {
+                        const isClock = item.productType === 'clock';
+                        return `
+                            <div class="item-card">
+                                <div class="item-header">
+                                    <h3>Item ${index + 1} ${isClock ? '(Clock)' : '(Frame)'}</h3>
+                                    <button onclick="downloadItem(${index})" class="btn-download" id="btn-${index}">
+                                        📥 Download High-Res
+                                    </button>
+                                </div>
+                                <div class="item-specs">
+                                    ${isClock ? `
+                                        <div class="spec-row">
+                                            <strong>Product:</strong>
+                                            <span>Custom Clock - ${item.frameSizeName}" Diameter</span>
+                                        </div>
+                                        <div class="spec-row">
+                                            <strong>Clock Hands:</strong>
+                                            <span>${item.clockHandsName || 'Standard'}</span>
+                                        </div>
+                                        <div class="spec-row">
+                                            <strong>Frame Option:</strong>
+                                            <span>${item.frameOptionName || 'Standard'}</span>
+                                        </div>
+                                    ` : `
+                                        <div class="spec-row">
+                                            <strong>Frame:</strong>
+                                            <span>${item.frameSizeName}" ${item.orientation}</span>
+                                        </div>
+                                        <div class="spec-row">
+                                            <strong>Mount:</strong>
+                                            <span>${item.mountName}</span>
+                                        </div>
+                                    `}
+                                </div>
+                                ${item.previewImage ? `
+                                    <div class="preview">
+                                        <img src="${item.previewImage}" alt="Preview">
+                                    </div>
+                                ` : ''}
+                                <div class="success-message" id="success-${index}">
+                                    ✅ Image downloaded successfully!
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                
+                <script>
+                    const orderData = ${JSON.stringify(order.order.items)};
+                    const orderId = '${orderId}';
+                    const downloadedItems = new Set();
+                    
+                    async function downloadItem(itemIndex) {
+                        if (downloadedItems.has(itemIndex)) {
+                            alert('This item has already been downloaded.');
+                            return;
+                        }
+                        
+                        const btn = document.getElementById('btn-' + itemIndex);
+                        const successMsg = document.getElementById('success-' + itemIndex);
+                        const item = orderData[itemIndex];
+                        
+                        if (!item.imageData) {
+                            alert('Image data not found for this item.');
+                            return;
+                        }
+                        
+                        btn.textContent = '⏳ Generating...';
+                        btn.disabled = true;
+                        
+                        try {
+                            // Create image from data URL
+                            const img = new Image();
+                            
+                            await new Promise((resolve, reject) => {
+                                img.onload = resolve;
+                                img.onerror = () => reject(new Error('Failed to load image'));
+                                img.src = item.imageData;
+                            });
+                            
+                            // Create canvas for high-res output
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            
+                            // Get frame dimensions based on orientation
+                            const frameSizeParts = item.frameSize.split('x');
+                            const baseWidth = parseInt(frameSizeParts[0]) * 300; // 300 DPI
+                            const baseHeight = parseInt(frameSizeParts[1]) * 300;
+                            
+                            if (item.orientation === 'landscape') {
+                                canvas.width = baseHeight;
+                                canvas.height = baseWidth;
+                            } else {
+                                canvas.width = baseWidth;
+                                canvas.height = baseHeight;
+                            }
+                            
+                            // Fill with white background
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            
+                            // Calculate proper scaling
+                            const aspect = img.width / img.height;
+                            const canvasAspect = canvas.width / canvas.height;
+                            let drawWidth, drawHeight, offsetX, offsetY;
+                            
+                            if (aspect > canvasAspect) {
+                                drawHeight = canvas.height;
+                                drawWidth = drawHeight * aspect;
+                                offsetX = (canvas.width - drawWidth) / 2;
+                                offsetY = 0;
+                            } else {
+                                drawWidth = canvas.width;
+                                drawHeight = drawWidth / aspect;
+                                offsetX = 0;
+                                offsetY = (canvas.height - drawHeight) / 2;
+                            }
+                            
+                            // Draw image
+                            ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+                            
+                            // Convert to blob and download
+                            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = orderId + '-item' + (itemIndex + 1) + '-' + item.frameSize + '-' + item.orientation + '.png';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            
+                            // Mark as downloaded
+                            downloadedItems.add(itemIndex);
+                            btn.textContent = '✓ Downloaded';
+                            successMsg.style.display = 'block';
+                            
+                        } catch (error) {
+                            console.error('Download error:', error);
+                            alert('Error downloading image: ' + error.message);
+                            btn.textContent = '📥 Download High-Res';
+                            btn.disabled = false;
+                        }
+                    }
+                </script>
+            </body>
+            </html>
+        `;
+        
+        res.send(downloadPageHTML);
+        
+    } catch (error) {
+        console.error('Error processing download page:', error);
+        res.status(500).send('Server error');
+    }
+});
+
+// API endpoint to get download data
 app.get('/api/download/:orderId/:token', async (req, res) => {
     try {
         const { orderId, token } = req.params;
@@ -1090,11 +1430,6 @@ app.get('/api/download/:orderId/:token', async (req, res) => {
             return res.status(403).json({ success: false, error: 'Download link has expired' });
         }
         
-        // Check if already downloaded
-        if (download.downloaded) {
-            return res.status(403).json({ success: false, error: 'This link has already been used' });
-        }
-        
         // Get order data
         const ordersFile = await readOrdersData();
         const order = ordersFile.orders.find(o => o.orderId === orderId);
@@ -1103,17 +1438,12 @@ app.get('/api/download/:orderId/:token', async (req, res) => {
             return res.status(404).json({ success: false, error: 'Order not found' });
         }
         
-        // Mark as downloaded
-        download.downloaded = true;
-        download.downloadedAt = new Date().toISOString();
-        await writeDownloadsData(downloadsFile);
-        
         // Return order data with images
         res.json({
             success: true,
             orderId,
             items: order.order.items,
-            message: 'Download successful. Use this data to generate print-ready images.'
+            expiresAt: download.expiresAt
         });
         
     } catch (error) {

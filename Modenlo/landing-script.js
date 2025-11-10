@@ -86,22 +86,20 @@ async function loadCategories() {
         
         if (categories && categories.length > 0) {
             categoriesGrid.innerHTML = categories.map(category => `
-                <a href="${category.link}" class="category-new-card">
-                    <div class="category-new-content">
-                        <div class="category-new-text">
-                            <h2 class="category-new-title">${category.name}</h2>
-                            <p class="category-new-description">${category.description}</p>
-                            <p class="category-price">Starting from ${category.startingPrice}</p>
-                            <span class="category-new-cta">
-                                Shop ${category.name}
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                                </svg>
-                            </span>
-                        </div>
-                        <div class="category-new-image">
-                            <img src="${category.image}" alt="${category.name}" loading="lazy" />
-                        </div>
+                <a href="${category.link}" class="category-card-modern">
+                    <div class="category-card-image">
+                        <img src="${category.image}" alt="${category.name}" loading="lazy" />
+                        <div class="category-card-overlay"></div>
+                    </div>
+                    <div class="category-card-body">
+                        <h3 class="category-card-title">${category.name}</h3>
+                        <p class="category-card-price">From ${category.startingPrice}</p>
+                        <span class="category-card-link">
+                            Explore
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                            </svg>
+                        </span>
                     </div>
                 </a>
             `).join('');
