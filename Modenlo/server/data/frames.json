@@ -41,16 +41,16 @@
       "available": true
     },
     {
-      "id": "35.43x15.74",
-      "size": "35.43x15.74",
+      "id": "35x12",
+      "size": "35x12",
       "width": 3600,
       "height": 4800,
-      "price": 25.75,
+      "price": 24.95,
       "available": true
     },
     {
-      "id": "31.49x11.81",
-      "size": "31.49x11.81",
+      "id": "31x11",
+      "size": "31x11",
       "width": 3600,
       "height": 4800,
       "price": 19.95,
