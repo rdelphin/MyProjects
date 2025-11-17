@@ -44,15 +44,15 @@
       "id": "35x12",
       "size": "35x12",
       "width": 3600,
-      "height": 4800,
+      "height": 10500,
       "price": 24.95,
       "available": true
     },
     {
       "id": "31x11",
       "size": "31x11",
-      "width": 3600,
-      "height": 4800,
+      "width": 3300,
+      "height": 9300,
       "price": 19.95,
       "available": true
     },

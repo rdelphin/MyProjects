@@ -31,7 +31,7 @@ let state = {
     isDragging: false,
     dragStart: { x: 0, y: 0 },
     frameSize: '8x10',
-    orientation: 'portrait',
+    orientation: getDisplayType() === 'mousepad' ? 'landscape' : 'portrait',
     selectedMount: 'no-mount',
     selectedClockHands: null,
     selectedFrameOption: null,
@@ -683,6 +683,18 @@ function init() {
     MOUNT_OPTIONS = {
         'no-mount': { name: 'No Mount', description: 'Standard frame without mount', price: 0.00 }
     };
+    
+    // Set default orientation for mouse pads BEFORE loading frames
+    const displayType = getDisplayType();
+    if (displayType === 'mousepad') {
+        state.orientation = 'landscape';
+        if (orientationSelect) {
+            orientationSelect.value = 'landscape';
+            orientationSelect.disabled = true;
+            orientationSelect.style.opacity = '0.6';
+            orientationSelect.style.cursor = 'not-allowed';
+        }
+    }
     
     // Load frames/clocks and mounts from API based on product type
     if (isClock()) {

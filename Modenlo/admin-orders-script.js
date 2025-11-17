@@ -361,16 +361,36 @@ async function downloadImage(orderId, itemIndex, buttonElement) {
                     filename = `${orderId}-item${itemIndex + 1}-clock-${item.frameSizeName}in.png`;
                 } else {
                     // For frames: rectangular, use frameSize and orientation
+                    // The imageData already contains the properly oriented final image from the cart
+                    // We just need to determine the correct output dimensions
+                    
+                    // Parse the frame size (e.g., "35x12" means 35 wide × 12 tall in portrait base)
                     const frameSizeParts = item.frameSize.split('x');
-                    const baseWidth = parseInt(frameSizeParts[0]) * 300; // 300 DPI
-                    const baseHeight = parseInt(frameSizeParts[1]) * 300;
+                    const firstNum = parseInt(frameSizeParts[0]);
+                    const secondNum = parseInt(frameSizeParts[1]);
+                    
+                    // Determine which is larger to know the base orientation
+                    let portraitWidth, portraitHeight;
+                    
+                    if (firstNum < secondNum) {
+                        // Normal case: first number is smaller (e.g., 8x10, 12x35)
+                        portraitWidth = firstNum * 300;
+                        portraitHeight = secondNum * 300;
+                    } else {
+                        // Inverted case: first number is larger (e.g., 35x12, 31x11)
+                        // This means the size name itself represents landscape
+                        portraitWidth = secondNum * 300;
+                        portraitHeight = firstNum * 300;
+                    }
 
                     if (item.orientation === 'landscape') {
-                        canvas.width = baseHeight;
-                        canvas.height = baseWidth;
+                        // Swap for landscape
+                        canvas.width = portraitHeight;
+                        canvas.height = portraitWidth;
                     } else {
-                        canvas.width = baseWidth;
-                        canvas.height = baseHeight;
+                        // Keep portrait
+                        canvas.width = portraitWidth;
+                        canvas.height = portraitHeight;
                     }
                     filename = `${orderId}-item${itemIndex + 1}-${item.frameSize}-${item.orientation}.png`;
                 }
@@ -379,27 +399,10 @@ async function downloadImage(orderId, itemIndex, buttonElement) {
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                // Draw image
-                const aspect = img.width / img.height;
-                const canvasAspect = canvas.width / canvas.height;
-
-                let drawWidth, drawHeight, offsetX, offsetY;
-
-                if (aspect > canvasAspect) {
-                    // Image is wider
-                    drawHeight = canvas.height;
-                    drawWidth = drawHeight * aspect;
-                    offsetX = (canvas.width - drawWidth) / 2;
-                    offsetY = 0;
-                } else {
-                    // Image is taller
-                    drawWidth = canvas.width;
-                    drawHeight = drawWidth / aspect;
-                    offsetX = 0;
-                    offsetY = (canvas.height - drawHeight) / 2;
-                }
-
-                ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+                // IMPORTANT: The imageData is already the final cropped/positioned image from the preview
+                // We just need to scale it up to the print dimensions maintaining the exact composition
+                // Draw the image to fill the entire canvas (it's already cropped correctly)
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                 // Download
                 canvas.toBlob(function(blob) {
