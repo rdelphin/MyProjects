@@ -57,15 +57,24 @@ const upload = multer({
 // Simple in-memory session store (in production, use Redis or database)
 const sessions = new Map();
 
-// Admin credentials (in production, use environment variables and hashed passwords)
-const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD = 'admin123'; // Change this in production!
+// Admin credentials from environment variables
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+
+// Log warning if using default credentials
+if (ADMIN_PASSWORD === 'admin123') {
+    console.warn('⚠️  WARNING: Using default admin password! Change ADMIN_PASSWORD in environment variables.');
+}
 
 // Middleware
-app.use(cors({
-    origin: true,
+// Configure CORS for production
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production' 
+        ? [process.env.APP_URL || 'https://modenlo.com', 'http://modenlo.com']
+        : true,
     credentials: true
-}));
+};
+app.use(cors(corsOptions));
 // Increase body size limit to handle large image data (50MB)
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
