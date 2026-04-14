@@ -81,6 +81,19 @@ body {
 }
 
 /* ================================================
+   PAGE HEADER
+   ================================================ */
+
+.framer-header {
+    padding: var(--space-10) var(--space-10) 0;
+    background: var(--background);
+}
+
+.framer-header .order-title {
+    margin-bottom: 0;
+}
+
+/* ================================================
    TWO-COLUMN GRID LAYOUT
    ================================================ */
 
@@ -671,12 +684,22 @@ body {
         grid-template-columns: 1fr;
     }
     
+    /* Mobile: Upload preview appears FIRST, then form */
     .upload-preview-col {
-        order: 2;
+        order: 1;
     }
     
     .order-form-col {
-        order: 1;
+        order: 2;
+    }
+    
+    .framer-header {
+        padding: var(--space-8) var(--space-8) var(--space-4);
+    }
+    
+    .framer-header .order-title {
+        margin-bottom: var(--space-4);
+        text-align: center;
     }
     
     .mount-grid-cards {
@@ -687,11 +710,20 @@ body {
 @media (max-width: 768px) {
     .container {
         padding: var(--space-4);
+        margin-top: 70px;
+    }
+    
+    .framer-header {
+        padding: var(--space-6) var(--space-5) var(--space-3);
     }
     
     .upload-preview-col,
     .order-form-col {
-        padding: var(--space-6);
+        padding: var(--space-5);
+    }
+    
+    .upload-preview-col {
+        padding-top: var(--space-4);
     }
     
     .order-title {
@@ -710,21 +742,123 @@ body {
     
     .add-to-cart-main {
         width: 100%;
+        font-size: 1rem;
+        padding: 1rem var(--space-6);
     }
     
     .mount-grid-cards {
         grid-template-columns: 1fr;
     }
+    
+    .form-select {
+        font-size: 1rem;
+        padding: var(--space-4);
+    }
+    
+    .zoom-slider {
+        height: 8px;
+    }
+    
+    .zoom-slider::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .zoom-slider::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+    }
 }
 
 @media (max-width: 480px) {
+    .container {
+        padding: var(--space-2);
+        margin-top: 60px;
+    }
+    
+    .upload-preview-col,
+    .order-form-col {
+        padding: var(--space-4);
+    }
+    
     .upload-dropzone {
-        padding: var(--space-8);
-        min-height: 300px;
+        padding: var(--space-6);
+        min-height: 280px;
     }
     
     .upload-dropzone svg {
         width: 60px;
         height: 60px;
+    }
+    
+    .upload-text {
+        font-size: 1.1rem;
+    }
+    
+    .choose-file-btn {
+        padding: var(--space-3) var(--space-6);
+        font-size: 0.95rem;
+    }
+    
+    .order-title {
+        font-size: 1.35rem;
+        margin-bottom: var(--space-6);
+    }
+    
+    .amount {
+        font-size: 2rem;
+    }
+    
+    .currency,
+    .cents {
+        font-size: 1.25rem;
+    }
+    
+    .add-to-cart-main {
+        padding: 0.95rem var(--space-5);
+        font-size: 0.95rem;
+    }
+    
+    .form-label {
+        font-size: 0.7rem;
+    }
+    
+    .mount-grid-cards {
+        gap: var(--space-3);
+    }
+    
+    .mount-card {
+        border-width: 2px;
+    }
+    
+    .mount-card-name {
+        font-size: 0.8rem;
+        padding: var(--space-2);
+    }
+    
+    .canvas-wrapper {
+        min-height: 300px;
+    }
+    
+    .change-image-btn,
+    .reset-btn,
+    .upload-new-btn {
+        font-size: 0.9rem;
+        padding: var(--space-3) var(--space-5);
+    }
+}
+
+@media (max-width: 360px) {
+    .order-title {
+        font-size: 1.25rem;
+    }
+    
+    .amount {
+        font-size: 1.75rem;
+    }
+    
+    .add-to-cart-main {
+        padding: 0.875rem var(--space-4);
+        font-size: 0.9rem;
     }
 }
