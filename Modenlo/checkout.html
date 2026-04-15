@@ -99,7 +99,10 @@
                             
                             <div class="form-group">
                                 <label for="phone">Phone Number</label>
-                                <input type="tel" id="phone" required placeholder="(555) 123-4567">
+                                <input type="tel" id="phone" required 
+                                       pattern="[\d\s\-\(\)\+]+" 
+                                       title="Please enter a valid phone number (e.g., 555-123-4567 or (555) 123-4567)"
+                                       placeholder="(555) 123-4567">
                             </div>
                         </div>
 
