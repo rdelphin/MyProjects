@@ -1,5 +1,6 @@
 // API Configuration
-const API_BASE = 'http://localhost:3000/api';
+// API Configuration - works on localhost, mobile devices, and production
+const API_BASE = `${window.location.origin}/api`;
 
 // Load available clock sizes and options
 async function loadClockData() {

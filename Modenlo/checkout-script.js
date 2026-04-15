@@ -1,3 +1,6 @@
+// API Configuration - works on localhost, mobile devices, and production
+const API_BASE = `${window.location.origin}/api`;
+
 // DOM Elements
 const checkoutForm = document.getElementById('checkoutForm');
 const orderItemsEl = document.getElementById('orderItems');
@@ -104,7 +107,7 @@ async function handleCheckout(e) {
     
     try {
         // Submit order to backend
-        const response = await fetch('http://localhost:3000/api/orders', {
+        const response = await fetch(`${API_BASE}/orders`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

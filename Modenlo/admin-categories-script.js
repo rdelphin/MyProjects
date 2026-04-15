@@ -1,4 +1,6 @@
 // Admin Categories Management Script
+// API Configuration - works on localhost, mobile devices, and production
+const API_BASE = `${window.location.origin}/api`;
 
 // Get session ID from localStorage
 const sessionId = localStorage.getItem('modenloSession');
@@ -12,7 +14,7 @@ async function checkAuth() {
     }
 
     try {
-        const response = await fetch('http://localhost:3000/api/auth/session', {
+        const response = await fetch(`${API_BASE}/auth/session`, {
             headers: {
                 'x-session-id': sessionId
             }
@@ -46,7 +48,7 @@ async function checkAuth() {
 
 // Logout function
 function logout() {
-    fetch('http://localhost:3000/api/auth/logout', {
+    fetch(`${API_BASE}/auth/logout`, {
         method: 'POST',
         headers: {
             'x-session-id': sessionId
@@ -60,7 +62,7 @@ function logout() {
 // Load categories from API
 async function loadCategories() {
     try {
-        const response = await fetch('http://localhost:3000/api/admin/categories', {
+        const response = await fetch(`${API_BASE}/admin/categories`, {
             headers: {
                 'x-session-id': sessionId
             }
@@ -176,7 +178,7 @@ async function addCategory(e) {
     };
 
     try {
-        const response = await fetch('http://localhost:3000/api/admin/categories', {
+        const response = await fetch(`${API_BASE}/admin/categories`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -204,7 +206,7 @@ async function addCategory(e) {
 // Edit category - open modal
 function editCategory(categoryId) {
     // Find category data
-    fetch(`http://localhost:3000/api/admin/categories`, {
+    fetch(`${API_BASE}/admin/categories`, {
         headers: {
             'x-session-id': sessionId
         }
@@ -250,7 +252,7 @@ async function saveCategory(e) {
     };
 
     try {
-        const response = await fetch(`http://localhost:3000/api/admin/categories/${categoryId}`, {
+        const response = await fetch(`${API_BASE}/admin/categories/${categoryId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -277,7 +279,7 @@ async function saveCategory(e) {
 // Toggle category status
 async function toggleCategoryStatus(categoryId, newStatus) {
     try {
-        const response = await fetch(`http://localhost:3000/api/admin/categories/${categoryId}/availability`, {
+        const response = await fetch(`${API_BASE}/admin/categories/${categoryId}/availability`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -307,7 +309,7 @@ async function deleteCategory(categoryId, categoryName) {
     }
 
     try {
-        const response = await fetch(`http://localhost:3000/api/admin/categories/${categoryId}`, {
+        const response = await fetch(`${API_BASE}/admin/categories/${categoryId}`, {
             method: 'DELETE',
             headers: {
                 'x-session-id': sessionId

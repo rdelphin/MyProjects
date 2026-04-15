@@ -1,5 +1,9 @@
 // API configuration
-const API_BASE = 'http://localhost:3000/api';
+// API Configuration - works on localhost, mobile devices, and production
+// Check if API_BASE is already defined by landing-script.js
+if (typeof API_BASE === 'undefined') {
+    var API_BASE = `${window.location.origin}/api`;
+}
 
 // Frame size configurations (will be loaded from API)
 let FRAME_SIZES = {};

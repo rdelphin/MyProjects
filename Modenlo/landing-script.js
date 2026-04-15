@@ -1,3 +1,6 @@
+// API Configuration - works on localhost, mobile devices, and production
+var API_BASE = `${window.location.origin}/api`;
+
 // Hamburger Menu Functionality
 function initHamburgerMenu() {
     const hamburger = document.getElementById('hamburger');
@@ -97,7 +100,7 @@ async function loadPopularPrices() {
     if (!pricesGrid) return;
     
     try {
-        const response = await fetch('http://localhost:3000/api/frames');
+        const response = await fetch(`${API_BASE}/frames`);
         const data = await response.json();
         
         // Extract frames array from response
@@ -128,7 +131,7 @@ async function loadCategories() {
     if (!categoriesGrid) return;
     
     try {
-        const response = await fetch('http://localhost:3000/api/categories');
+        const response = await fetch(`${API_BASE}/categories`);
         const data = await response.json();
         
         const categories = data.categories || [];
