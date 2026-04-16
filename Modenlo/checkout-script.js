@@ -1,6 +1,62 @@
 // API Configuration - works on localhost, mobile devices, and production
 const API_BASE = `${window.location.origin}/api`;
 
+// Connection check function
+async function checkAPIHealth() {
+    try {
+        console.log('[HEALTH CHECK] Testing API connectivity...');
+        const response = await fetch(`${API_BASE}/health`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            console.warn('[HEALTH CHECK] API returned non-OK status:', response.status);
+            return false;
+        }
+        
+        const data = await response.json();
+        console.log('[HEALTH CHECK] API is accessible:', data);
+        return data.success === true;
+    } catch (error) {
+        console.error('[HEALTH CHECK] Failed to reach API:', error);
+        return false;
+    }
+}
+
+// Retry fetch with exponential backoff
+async function retryFetch(url, options, maxRetries = 3) {
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`[FETCH] Attempt ${attempt}/${maxRetries} to ${url}`);
+            
+            const response = await fetch(url, options);
+            console.log(`[FETCH] Attempt ${attempt} response:`, response.status, response.statusText);
+            
+            return response; // Return response (caller will check if ok)
+            
+        } catch (error) {
+            lastError = error;
+            console.error(`[FETCH] Attempt ${attempt} failed:`, error.message);
+            
+            // Don't retry on last attempt
+            if (attempt < maxRetries) {
+                // Exponential backoff: 1s, 2s, 4s
+                const delay = Math.pow(2, attempt - 1) * 1000;
+                console.log(`[FETCH] Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    
+    // All retries failed
+    throw lastError;
+}
+
 // DOM Elements
 const checkoutForm = document.getElementById('checkoutForm');
 const orderItemsEl = document.getElementById('orderItems');
@@ -66,7 +122,23 @@ async function handleCheckout(e) {
     
     // Disable submit button to prevent double submission
     const submitButton = e.target.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
     submitButton.disabled = true;
+    submitButton.textContent = 'Checking connection...';
+    
+    // First, check if API is reachable
+    console.log('[CHECKOUT] Testing API connectivity before submitting order...');
+    const apiHealthy = await checkAPIHealth();
+    
+    if (!apiHealthy) {
+        console.error('[CHECKOUT] API health check failed');
+        alert('Unable to connect to the order service. Please check your internet connection and try again.\n\nIf the problem persists, please contact support.');
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+        return;
+    }
+    
+    console.log('[CHECKOUT] API is healthy, proceeding with order submission...');
     submitButton.textContent = 'Processing Order...';
     
     // Get full cart items with imageData (not in checkoutData to avoid localStorage quota)
@@ -107,20 +179,23 @@ async function handleCheckout(e) {
     
     try {
         // Log the API endpoint for debugging
-        console.log('Submitting order to:', `${API_BASE}/orders`);
+        console.log('[CHECKOUT] Submitting order to:', `${API_BASE}/orders`);
+        console.log('[CHECKOUT] Current origin:', window.location.origin);
+        console.log('[CHECKOUT] Order data size:', JSON.stringify(orderData).length, 'bytes');
         
-        // Submit order to backend
-        const response = await fetch(`${API_BASE}/orders`, {
+        // Submit order to backend with retry logic
+        const response = await retryFetch(`${API_BASE}/orders`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(orderData)
-        });
+        }, 3); // Try up to 3 times
         
         // Log response details for debugging
-        console.log('Response status:', response.status);
-        console.log('Response content-type:', response.headers.get('content-type'));
+        console.log('[CHECKOUT] Response status:', response.status);
+        console.log('[CHECKOUT] Response statusText:', response.statusText);
+        console.log('[CHECKOUT] Response content-type:', response.headers.get('content-type'));
         
         // Check if response is ok before parsing
         if (!response.ok) {
@@ -175,24 +250,43 @@ async function handleCheckout(e) {
             throw new Error(result.error || 'Failed to process order');
         }
     } catch (error) {
-        console.error('Error submitting order:', error);
+        console.error('[CHECKOUT] Error submitting order:', error);
+        console.error('[CHECKOUT] Error type:', error.name);
+        console.error('[CHECKOUT] Error stack:', error.stack);
         
-        // Provide more helpful error message
+        // Provide more helpful error message based on error type
         let userMessage = 'Error processing your order. Please try again.';
+        let technicalDetails = error.message;
         
-        if (error.message.includes('Server returned an error page') || error.message.includes('Server error')) {
-            userMessage = 'Unable to connect to the order service. Please check your internet connection and try again.';
-        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-            userMessage = 'Network error. Please check your internet connection and try again.';
-        } else {
-            userMessage = `Error: ${error.message}`;
+        if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+            userMessage = 'Unable to connect to the order service.\n\n' +
+                         'This may be due to:\n' +
+                         '• Poor internet connection\n' +
+                         '• Server maintenance\n' +
+                         '• Browser security settings\n\n' +
+                         'Please check your connection and try again.';
+            technicalDetails = 'Network request failed after 3 attempts';
+        } else if (error.message.includes('CORS')) {
+            userMessage = 'Connection blocked by security policy.\n\n' +
+                         'Please try:\n' +
+                         '• Clearing your browser cache\n' +
+                         '• Using a different browser\n' +
+                         '• Contacting support if the issue persists';
+            technicalDetails = 'CORS policy error';
+        } else if (error.message.includes('Server returned an error page') || error.message.includes('Server error')) {
+            userMessage = 'The order service is temporarily unavailable.\n\n' +
+                         'Please try again in a few moments.\n' +
+                         'If the problem persists, contact support.';
         }
+        
+        console.log('[CHECKOUT] User message:', userMessage);
+        console.log('[CHECKOUT] Technical details:', technicalDetails);
         
         alert(userMessage);
         
         // Re-enable submit button
         submitButton.disabled = false;
-        submitButton.textContent = 'Place Order';
+        submitButton.textContent = originalButtonText;
     }
 }
 

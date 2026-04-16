@@ -67,14 +67,31 @@ if (ADMIN_PASSWORD === 'admin123') {
 }
 
 // Middleware
-// Configure CORS for production
+// Configure CORS for production - support both www and non-www variants
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production' 
-        ? [process.env.APP_URL || 'https://modenlo.com', 'http://modenlo.com']
+        ? [
+            'https://modenlo.com',
+            'http://modenlo.com',
+            'https://www.modenlo.com',
+            'http://www.modenlo.com'
+          ]
         : true,
     credentials: true
 };
 app.use(cors(corsOptions));
+
+// Log CORS errors for debugging
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (origin && process.env.NODE_ENV === 'production') {
+        const allowedOrigins = corsOptions.origin;
+        if (!allowedOrigins.includes(origin)) {
+            console.warn('[CORS] Blocked request from origin:', origin);
+        }
+    }
+    next();
+});
 // Increase body size limit to handle large image data (50MB)
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
@@ -947,6 +964,15 @@ app.patch('/api/admin/clocks/:id/availability', requireAdmin, async (req, res) =
     } catch (error) {
         res.status(500).json({ success: false, error: 'Failed to update clock availability' });
     }
+});
+
+// HEALTH CHECK ROUTE
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        success: true, 
+        message: 'API is running',
+        timestamp: new Date().toISOString()
+    });
 });
 
 // ORDER ROUTES
