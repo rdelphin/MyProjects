@@ -106,6 +106,9 @@ async function handleCheckout(e) {
     };
     
     try {
+        // Log the API endpoint for debugging
+        console.log('Submitting order to:', `${API_BASE}/orders`);
+        
         // Submit order to backend
         const response = await fetch(`${API_BASE}/orders`, {
             method: 'POST',
@@ -115,6 +118,41 @@ async function handleCheckout(e) {
             body: JSON.stringify(orderData)
         });
         
+        // Log response details for debugging
+        console.log('Response status:', response.status);
+        console.log('Response content-type:', response.headers.get('content-type'));
+        
+        // Check if response is ok before parsing
+        if (!response.ok) {
+            // Try to get error message from response
+            let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+            
+            // Try to parse as JSON first
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    console.error('Failed to parse error response as JSON:', e);
+                }
+            } else {
+                // If not JSON, get text to help debug
+                const errorText = await response.text();
+                console.error('Non-JSON response received:', errorText.substring(0, 500));
+                
+                // Check if it's an HTML error page
+                if (errorText.includes('<!DOCTYPE') || errorText.includes('<html')) {
+                    errorMessage = 'Server returned an error page. Please check if the server is running correctly.';
+                } else {
+                    errorMessage = `Server error: ${errorText.substring(0, 100)}`;
+                }
+            }
+            
+            throw new Error(errorMessage);
+        }
+        
+        // Now safe to parse JSON
         const result = await response.json();
         
         if (result.success) {
@@ -138,7 +176,19 @@ async function handleCheckout(e) {
         }
     } catch (error) {
         console.error('Error submitting order:', error);
-        alert('Error processing your order. Please try again.\n\n' + error.message);
+        
+        // Provide more helpful error message
+        let userMessage = 'Error processing your order. Please try again.';
+        
+        if (error.message.includes('Server returned an error page') || error.message.includes('Server error')) {
+            userMessage = 'Unable to connect to the order service. Please check your internet connection and try again.';
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            userMessage = 'Network error. Please check your internet connection and try again.';
+        } else {
+            userMessage = `Error: ${error.message}`;
+        }
+        
+        alert(userMessage);
         
         // Re-enable submit button
         submitButton.disabled = false;

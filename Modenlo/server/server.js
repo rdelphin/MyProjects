@@ -993,10 +993,28 @@ async function writeDownloadsData(data) {
 // Create new order
 app.post('/api/orders', async (req, res) => {
     try {
+        // Log incoming request
+        console.log('[ORDER] New order request received');
+        console.log('[ORDER] Request headers:', {
+            'content-type': req.headers['content-type'],
+            'origin': req.headers['origin'],
+            'user-agent': req.headers['user-agent']
+        });
+        
         const orderData = req.body;
+        
+        // Validate order data
+        if (!orderData || !orderData.order || !orderData.order.items || orderData.order.items.length === 0) {
+            console.error('[ORDER] Invalid order data received');
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Invalid order data: missing items' 
+            });
+        }
         
         // Generate order ID
         const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+        console.log('[ORDER] Generated order ID:', orderId);
         
         // Read existing orders
         const ordersFile = await readOrdersData();
@@ -1012,12 +1030,15 @@ app.post('/api/orders', async (req, res) => {
         // Save order
         ordersFile.orders.push(order);
         await writeOrdersData(ordersFile);
+        console.log('[ORDER] Order saved to file');
         
         // Send customer confirmation email
         const customerEmail = await emailService.sendCustomerConfirmation(orderData);
+        console.log('[ORDER] Customer email result:', customerEmail.success ? 'sent' : 'failed');
         
         // Send admin notification with download link
         const adminEmail = await emailService.sendAdminNotification(orderData, orderId);
+        console.log('[ORDER] Admin email result:', adminEmail.success ? 'sent' : 'failed');
         
         // Store download token if admin email succeeded
         if (adminEmail.success && adminEmail.downloadToken) {
@@ -1030,8 +1051,10 @@ app.post('/api/orders', async (req, res) => {
                 createdAt: new Date().toISOString()
             });
             await writeDownloadsData(downloadsFile);
+            console.log('[ORDER] Download token stored');
         }
         
+        console.log('[ORDER] Order completed successfully:', orderId);
         res.json({
             success: true,
             orderId,
@@ -1040,8 +1063,14 @@ app.post('/api/orders', async (req, res) => {
         });
         
     } catch (error) {
-        console.error('Error creating order:', error);
-        res.status(500).json({ success: false, error: 'Failed to create order' });
+        console.error('[ORDER] Error creating order:', error);
+        console.error('[ORDER] Error stack:', error.stack);
+        
+        // Ensure we always return JSON, never HTML
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to create order: ' + error.message 
+        });
     }
 });
 
