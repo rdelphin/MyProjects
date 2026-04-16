@@ -110,6 +110,64 @@ function getFullCart() {
     return cart ? JSON.parse(cart) : [];
 }
 
+// Upload a single image to the server
+async function uploadImage(imageData, itemId) {
+    try {
+        console.log(`[IMAGE UPLOAD] Uploading image for item ${itemId}...`);
+        
+        const response = await retryFetch(`${API_BASE}/upload-image`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ imageData, itemId })
+        }, 2); // Retry twice for image uploads
+        
+        if (!response.ok) {
+            throw new Error(`Image upload failed: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log(`[IMAGE UPLOAD] Image uploaded successfully: ${result.imageId}`);
+            return result.imageId;
+        } else {
+            throw new Error(result.error || 'Failed to upload image');
+        }
+    } catch (error) {
+        console.error(`[IMAGE UPLOAD] Error uploading image:`, error);
+        throw error;
+    }
+}
+
+// Upload all images and get image IDs
+async function uploadAllImages(items, submitButton) {
+    const imageIds = [];
+    const totalImages = items.filter(item => item.imageData).length;
+    let uploadedCount = 0;
+    
+    console.log(`[IMAGE UPLOAD] Starting upload of ${totalImages} images...`);
+    
+    for (const item of items) {
+        if (item.imageData) {
+            uploadedCount++;
+            submitButton.textContent = `Uploading images (${uploadedCount}/${totalImages})...`;
+            
+            try {
+                const imageId = await uploadImage(item.imageData, item.id);
+                imageIds.push({ itemId: item.id, imageId });
+            } catch (error) {
+                console.error(`[IMAGE UPLOAD] Failed to upload image for item ${item.id}:`, error);
+                throw new Error(`Failed to upload image ${uploadedCount}/${totalImages}. Please try again.`);
+            }
+        }
+    }
+    
+    console.log(`[IMAGE UPLOAD] All ${totalImages} images uploaded successfully`);
+    return imageIds;
+}
+
 // Handle form submission
 async function handleCheckout(e) {
     e.preventDefault();
@@ -138,10 +196,9 @@ async function handleCheckout(e) {
         return;
     }
     
-    console.log('[CHECKOUT] API is healthy, proceeding with order submission...');
-    submitButton.textContent = 'Processing Order...';
+    console.log('[CHECKOUT] API is healthy, proceeding with two-stage upload...');
     
-    // Get full cart items with imageData (not in checkoutData to avoid localStorage quota)
+    // Get full cart items with imageData
     const fullCart = getFullCart();
     
     // Merge checkout items with full cart items to get imageData
@@ -149,41 +206,62 @@ async function handleCheckout(e) {
         const cartItem = fullCart.find(item => item.id === checkoutItem.id);
         return {
             ...checkoutItem,
-            imageData: cartItem ? cartItem.imageData : null  // Add full image data
+            imageData: cartItem ? cartItem.imageData : null
         };
     });
     
-    // Collect form data
-    const orderData = {
-        contact: {
-            email: document.getElementById('email').value
-        },
-        shipping: {
-            firstName: document.getElementById('firstName').value,
-            lastName: document.getElementById('lastName').value,
-            address: document.getElementById('address').value,
-            city: document.getElementById('city').value,
-            state: document.getElementById('state').value,
-            zipCode: document.getElementById('zipCode').value,
-            phone: document.getElementById('phone').value
-        },
-        payment: {
-            method: document.querySelector('input[name="paymentMethod"]:checked').value
-        },
-        order: {
-            items: fullOrderItems,  // Use items with full imageData
-            totals: checkoutData.totals,
-            orderDate: new Date().toISOString()
-        }
-    };
-    
     try {
+        // Stage 1: Upload all images and get image IDs
+        const imageIds = await uploadAllImages(fullOrderItems, submitButton);
+        
+        // Stage 2: Prepare order with image IDs instead of full imageData
+        const orderItemsWithIds = fullOrderItems.map(item => {
+            const imageIdMapping = imageIds.find(mapping => mapping.itemId === item.id);
+            
+            if (imageIdMapping) {
+                // Replace imageData with imageId
+                const { imageData, ...itemWithoutImageData } = item;
+                return {
+                    ...itemWithoutImageData,
+                    imageId: imageIdMapping.imageId
+                };
+            }
+            
+            // No image for this item
+            return item;
+        });
+        
+        submitButton.textContent = 'Processing Order...';
+    
+        // Collect form data with image IDs
+        const orderData = {
+            contact: {
+                email: document.getElementById('email').value
+            },
+            shipping: {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                zipCode: document.getElementById('zipCode').value,
+                phone: document.getElementById('phone').value
+            },
+            payment: {
+                method: document.querySelector('input[name="paymentMethod"]:checked').value
+            },
+            order: {
+                items: orderItemsWithIds,  // Use items with imageIds (not full imageData)
+                totals: checkoutData.totals,
+                orderDate: new Date().toISOString()
+            }
+        };
         // Log the API endpoint for debugging
         console.log('[CHECKOUT] Submitting order to:', `${API_BASE}/orders`);
         console.log('[CHECKOUT] Current origin:', window.location.origin);
-        console.log('[CHECKOUT] Order data size:', JSON.stringify(orderData).length, 'bytes');
+        console.log('[CHECKOUT] Order data size (with imageIds):', JSON.stringify(orderData).length, 'bytes');
         
-        // Submit order to backend with retry logic
+        // Submit order to backend with retry logic (now with small payload)
         const response = await retryFetch(`${API_BASE}/orders`, {
             method: 'POST',
             headers: {
