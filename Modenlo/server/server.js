@@ -975,101 +975,6 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// IMAGE UPLOAD ENDPOINT (for two-stage order process)
-// Temporary in-memory storage for uploaded images
-const tempImageStore = new Map();
-
-// Cleanup expired images every 10 minutes
-setInterval(() => {
-    const now = Date.now();
-    for (const [imageId, data] of tempImageStore.entries()) {
-        // Remove images older than 1 hour
-        if (now - data.uploadedAt > 60 * 60 * 1000) {
-            tempImageStore.delete(imageId);
-            console.log(`[IMAGE CLEANUP] Removed expired image: ${imageId}`);
-        }
-    }
-}, 10 * 60 * 1000);
-
-// Upload image endpoint
-app.post('/api/upload-image', async (req, res) => {
-    try {
-        const { imageData, itemId } = req.body;
-        
-        console.log('[IMAGE UPLOAD] New image upload request');
-        
-        // Validate image data
-        if (!imageData || typeof imageData !== 'string') {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Invalid image data' 
-            });
-        }
-        
-        // Validate image size (allow up to 50MB in base64)
-        if (imageData.length > 50 * 1024 * 1024) {
-            return res.status(413).json({ 
-                success: false, 
-                error: 'Image too large (max 50MB)' 
-            });
-        }
-        
-        // Generate unique image ID
-        const imageId = `IMG-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-        
-        // Store image with metadata
-        tempImageStore.set(imageId, {
-            imageData,
-            itemId: itemId || 'unknown',
-            uploadedAt: Date.now(),
-            size: imageData.length
-        });
-        
-        console.log(`[IMAGE UPLOAD] Stored image ${imageId} (${(imageData.length / 1024 / 1024).toFixed(2)}MB)`);
-        console.log(`[IMAGE UPLOAD] Total images in store: ${tempImageStore.size}`);
-        
-        res.json({
-            success: true,
-            imageId,
-            message: 'Image uploaded successfully'
-        });
-        
-    } catch (error) {
-        console.error('[IMAGE UPLOAD] Error uploading image:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to upload image: ' + error.message 
-        });
-    }
-});
-
-// Get image by ID (for retrieval)
-app.get('/api/image/:imageId', (req, res) => {
-    try {
-        const { imageId } = req.params;
-        const imageInfo = tempImageStore.get(imageId);
-        
-        if (!imageInfo) {
-            return res.status(404).json({ 
-                success: false, 
-                error: 'Image not found or expired' 
-            });
-        }
-        
-        res.json({
-            success: true,
-            imageData: imageInfo.imageData
-        });
-        
-    } catch (error) {
-        console.error('[IMAGE RETRIEVAL] Error retrieving image:', error);
-        res.status(500).json({ 
-            success: false, 
-            error: 'Failed to retrieve image' 
-        });
-    }
-});
-
 // ORDER ROUTES
 
 // Helper functions for orders
@@ -1137,70 +1042,28 @@ app.post('/api/orders', async (req, res) => {
         const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
         console.log('[ORDER] Generated order ID:', orderId);
         
-        // Process items: retrieve images by ID if imageId is present
-        const processedItems = await Promise.all(orderData.order.items.map(async (item) => {
-            // If item has imageId instead of imageData, retrieve full image
-            if (item.imageId && !item.imageData) {
-                console.log(`[ORDER] Retrieving image for item: ${item.imageId}`);
-                const imageInfo = tempImageStore.get(item.imageId);
-                
-                if (imageInfo) {
-                    console.log(`[ORDER] Found image ${item.imageId}, size: ${(imageInfo.size / 1024 / 1024).toFixed(2)}MB`);
-                    // Replace imageId with full imageData
-                    const { imageId, ...itemWithoutId } = item;
-                    return {
-                        ...itemWithoutId,
-                        imageData: imageInfo.imageData
-                    };
-                } else {
-                    console.warn(`[ORDER] Image not found for ID: ${item.imageId}`);
-                    // Item without image - keep as is
-                    return item;
-                }
-            }
-            // Item already has imageData or no image needed
-            return item;
-        }));
-        
-        // Create order with processed items (full imageData)
-        const processedOrderData = {
-            ...orderData,
-            order: {
-                ...orderData.order,
-                items: processedItems
-            }
-        };
-        
         // Read existing orders
         const ordersFile = await readOrdersData();
         
-        // Create order record with full images
+        // Create order record
         const order = {
             orderId,
-            ...processedOrderData,
+            ...orderData,
             status: 'pending',
             createdAt: new Date().toISOString()
         };
-        
-        // Clean up uploaded images from temp store after order is created
-        orderData.order.items.forEach(item => {
-            if (item.imageId) {
-                tempImageStore.delete(item.imageId);
-                console.log(`[ORDER] Cleaned up temp image: ${item.imageId}`);
-            }
-        });
         
         // Save order
         ordersFile.orders.push(order);
         await writeOrdersData(ordersFile);
         console.log('[ORDER] Order saved to file');
         
-        // Send customer confirmation email (use processed data with full images)
-        const customerEmail = await emailService.sendCustomerConfirmation(processedOrderData);
+        // Send customer confirmation email
+        const customerEmail = await emailService.sendCustomerConfirmation(orderData);
         console.log('[ORDER] Customer email result:', customerEmail.success ? 'sent' : 'failed');
         
-        // Send admin notification with download link (use processed data with full images)
-        const adminEmail = await emailService.sendAdminNotification(processedOrderData, orderId);
+        // Send admin notification with download link
+        const adminEmail = await emailService.sendAdminNotification(orderData, orderId);
         console.log('[ORDER] Admin email result:', adminEmail.success ? 'sent' : 'failed');
         
         // Store download token if admin email succeeded
