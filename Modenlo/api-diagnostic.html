@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modenlo API Diagnostic Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .status-card {
+            background: #f8f9ff;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .status-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .status-pending {
+            background: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .status-success {
+            background: #28a745;
+        }
+        
+        .status-error {
+            background: #dc3545;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .test-result {
+            background: white;
+            border-left: 4px solid #e0e0e0;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .test-result.success {
+            border-left-color: #28a745;
+        }
+        
+        .test-result.error {
+            border-left-color: #dc3545;
+        }
+        
+        .test-result.warning {
+            border-left-color: #ffc107;
+        }
+        
+        .test-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .test-details {
+            color: #666;
+            font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h4 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        .error-box {
+            background: #ffebee;
+            border: 2px solid #f44336;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .error-box h4 {
+            color: #c62828;
+            margin-bottom: 10px;
+        }
+        
+        .success-box {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .success-box h4 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+        }
+        
+        code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Modenlo API Diagnostic Tool</h1>
+        <p class="subtitle">This tool will test your API connectivity and identify issues</p>
+        
+        <div class="info-box">
+            <h4>📌 What This Tests:</h4>
+            <ul>
+                <li>✅ API endpoint accessibility (health check)</li>
+                <li>✅ CORS configuration</li>
+                <li>✅ Data endpoints (frames, mounts, categories)</li>
+                <li>✅ Server response times</li>
+                <li>✅ Node.js application status</li>
+            </ul>
+        </div>
+        
+        <button id="runTestsBtn" class="btn" onclick="runAllTests()">
+            🚀 Run Diagnostic Tests
+        </button>
+        
+        <div id="progressContainer" style="display: none;">
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <p id="progressText" style="text-align: center; margin-top: 10px; color: #666;"></p>
+        </div>
+        
+        <div id="resultsContainer"></div>
+        
+        <div id="summaryContainer"></div>
+    </div>
+    
+    <script>
+        const API_BASE = `${window.location.origin}/api`;
+        let testResults = [];
+        
+        async function runAllTests() {
+            const btn = document.getElementById('runTestsBtn');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const summaryContainer = document.getElementById('summaryContainer');
+            const progressContainer = document.getElementById('progressContainer');
+            
+            btn.disabled = true;
+            btn.textContent = '⏳ Running Tests...';
+            resultsContainer.innerHTML = '';
+            summaryContainer.innerHTML = '';
+            progressContainer.style.display = 'block';
+            testResults = [];
+            
+            const tests = [
+                { name: 'Environment Detection', fn: testEnvironment },
+                { name: 'API Health Check', fn: testHealthEndpoint },
+                { name: 'Frames Endpoint', fn: testFramesEndpoint },
+                { name: 'Mounts Endpoint', fn: testMountsEndpoint },
+                { name: 'Categories Endpoint', fn: testCategoriesEndpoint },
+                { name: 'CORS Configuration', fn: testCORS },
+                { name: 'Response Time', fn: testResponseTime }
+            ];
+            
+            for (let i = 0; i < tests.length; i++) {
+                const test = tests[i];
+                updateProgress((i / tests.length) * 100, `Testing: ${test.name}`);
+                
+                const result = await test.fn();
+                testResults.push(result);
+                displayTestResult(result);
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            updateProgress(100, 'All tests complete!');
+            displaySummary();
+            
+            btn.disabled = false;
+            btn.textContent = '🔄 Run Tests Again';
+        }
+        
+        function updateProgress(percent, text) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = text;
+        }
+        
+        async function testEnvironment() {
+            return {
+                name: 'Environment Detection',
+                status: 'success',
+                details: `Origin: ${window.location.origin}
+API Base: ${API_BASE}
+Protocol: ${window.location.protocol}
+Hostname: ${window.location.hostname}
+User Agent: ${navigator.userAgent.substring(0, 100)}...`
+            };
+        }
+        
+        async function testHealthEndpoint() {
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE}/health`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const duration = Date.now() - startTime;
+                
+                if (!response.ok) {
+                    return {
+                        name: 'API Health Check',
+                        status: 'error',
+                        details: `HTTP ${response.status} ${response.statusText}
+Response time: ${duration}ms
+
+⚠️ API endpoint returned error status.
+This means the endpoint exists but returned an error.
+
+Possible causes:
+1. Node.js app is running but has errors
+2. Server-side error in the health endpoint
+3. Configuration issue in server code`
+                    };
+                }
+                
+                const data = await response.json();
+                
+                return {
+                    name: 'API Health Check',
+                    status: 'success',
+                    details: `✅ API is accessible and responding!
+Response time: ${duration}ms
+Response: ${JSON.stringify(data, null, 2)}
+
+This is GOOD! Your Node.js app is running and accessible.`
+                };
+                
+            } catch (error) {
+                return {
+                    name: 'API Health Check',
+                    status: 'error',
+                    details: `❌ Failed to connect to API
+Error: ${error.message}
+
+This is the "Failed to Fetch" error you're seeing!
+
+Common causes:
+1. Node.js application is NOT running in hPanel
+2. .htaccess is not proxying requests correctly
+3. Wrong port configured in .htaccess
+4. Apache mod_proxy not enabled
+
+SOLUTION:
+- Check hPanel → Node.js → Application Status
+- Make sure it shows "Running" (not "Stopped" or "Failed")
+- Verify port number in .htaccess matches hPanel
+- Try .htaccess.HOSTINGER_PORT with correct port`
+                };
+            }
+        }
+        
+        async function testFramesEndpoint() {
+            try {
+                const response = await fetch(`${API_BASE}/frames`);
+                if (!response.ok) {
+                    return {
+                        name: 'Frames Endpoint',
+                        status: 'error',
+                        details: `HTTP ${response.status}: Cannot fetch frame data`
+                    };
+                }
+                const data = await response.json();
+                return {
+                    name: 'Frames Endpoint',
+                    status: 'success',
+                    details: `✅ Retrieved ${data.frames ? data.frames.length : 0} frames`
+                };
+            } catch (error) {
+                return {
+                    name: 'Frames Endpoint',
+                    status: 'error',
+                    details: `Error: ${error.message}`
+                };
+            }
+        }
+        
+        async function testMountsEndpoint() {
+            try {
+                const response = await fetch(`${API_BASE}/mounts`);
+                if (!response.ok) {
+                    return {
+                        name: 'Mounts Endpoint',
+                        status: 'error',
+                        details: `HTTP ${response.status}: Cannot fetch mount data`
+                    };
+                }
+                const data = await response.json();
+                return {
+                    name: 'Mounts Endpoint',
+                    status: 'success',
+                    details: `✅ Retrieved ${data.mounts ? data.mounts.length : 0} mounts`
+                };
+            } catch (error) {
+                return {
+                    name: 'Mounts Endpoint',
+                    status: 'error',
+                    details: `Error: ${error.message}`
+                };
+            }
+        }
+        
+        async function testCategoriesEndpoint() {
+            try {
+                const response = await fetch(`${API_BASE}/categories`);
+                if (!response.ok) {
+                    return {
+                        name: 'Categories Endpoint',
+                        status: 'error',
+                        details: `HTTP ${response.status}: Cannot fetch category data`
+                    };
+                }
+                const data = await response.json();
+                return {
+                    name: 'Categories Endpoint',
+                    status: 'success',
+                    details: `✅ Retrieved ${data.categories ? data.categories.length : 0} categories`
+                };
+            } catch (error) {
+                return {
+                    name: 'Categories Endpoint',
+                    status: 'error',
+                    details: `Error: ${error.message}`
+                };
+            }
+        }
+        
+        async function testCORS() {
+            try {
+                const response = await fetch(`${API_BASE}/health`, {
+                    method: 'OPTIONS'
+                });
+                
+                const corsHeaders = {
+                    'Access-Control-Allow-Origin': response.headers.get('Access-Control-Allow-Origin'),
+                    'Access-Control-Allow-Methods': response.headers.get('Access-Control-Allow-Methods'),
+                    'Access-Control-Allow-Headers': response.headers.get('Access-Control-Allow-Headers')
+                };
+                
+                return {
+                    name: 'CORS Configuration',
+                    status: corsHeaders['Access-Control-Allow-Origin'] ? 'success' : 'warning',
+                    details: `CORS Headers:
+${JSON.stringify(corsHeaders, null, 2)}
+
+${corsHeaders['Access-Control-Allow-Origin'] ? '✅ CORS is configured' : '⚠️ CORS headers may be missing'}`
+                };
+            } catch (error) {
+                return {
+                    name: 'CORS Configuration',
+                    status: 'warning',
+                    details: `Could not test CORS: ${error.message}`
+                };
+            }
+        }
+        
+        async function testResponseTime() {
+            try {
+                const times = [];
+                for (let i = 0; i < 3; i++) {
+                    const start = Date.now();
+                    await fetch(`${API_BASE}/health`);
+                    times.push(Date.now() - start);
+                }
+                const avg = times.reduce((a, b) => a + b, 0) / times.length;
+                
+                return {
+                    name: 'Response Time',
+                    status: avg < 1000 ? 'success' : 'warning',
+                    details: `Average: ${avg.toFixed(0)}ms
+Min: ${Math.min(...times)}ms
+Max: ${Math.max(...times)}ms
+
+${avg < 500 ? '✅ Excellent response time' : avg < 1000 ? '✅ Good response time' : '⚠️ Slow response - check server load'}`
+                };
+            } catch (error) {
+                return {
+                    name: 'Response Time',
+                    status: 'error',
+                    details: `Could not measure: ${error.message}`
+                };
+            }
+        }
+        
+        function displayTestResult(result) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            const card = document.createElement('div');
+            card.className = 'status-card';
+            
+            const statusClass = result.status === 'success' ? 'success' : 
+                               result.status === 'error' ? 'error' : 'warning';
+            
+            card.innerHTML = `
+                <h3>
+                    <span class="status-indicator status-${result.status}"></span>
+                    ${result.name}
+                </h3>
+                <div class="test-result ${statusClass}">
+                    <div class="test-details">${result.details}</div>
+                </div>
+            `;
+            
+            resultsContainer.appendChild(card);
+        }
+        
+        function displaySummary() {
+            const summaryContainer = document.getElementById('summaryContainer');
+            
+            const successCount = testResults.filter(r => r.status === 'success').length;
+            const errorCount = testResults.filter(r => r.status === 'error').length;
+            const warningCount = testResults.filter(r => r.status === 'warning').length;
+            
+            let summaryHTML = '';
+            
+            if (errorCount === 0) {
+                summaryHTML = `
+                    <div class="success-box">
+                        <h4>🎉 All Systems Operational!</h4>
+                        <p>✅ ${successCount} tests passed</p>
+                        <p>${warningCount > 0 ? `⚠️ ${warningCount} warnings (non-critical)` : ''}</p>
+                        <p><strong>Your API is working correctly!</strong></p>
+                        <p>The "failed to fetch" error should be resolved.</p>
+                    </div>
+                `;
+            } else {
+                summaryHTML = `
+                    <div class="error-box">
+                        <h4>⚠️ Issues Detected</h4>
+                        <p>❌ ${errorCount} tests failed</p>
+                        <p>✅ ${successCount} tests passed</p>
+                        <p>${warningCount > 0 ? `⚠️ ${warningCount} warnings` : ''}</p>
+                        <hr style="margin: 15px 0; border: none; border-top: 1px solid #ffcdd2;">
+                        <h4 style="margin-top: 15px;">🔧 Next Steps:</h4>
+                        <ol style="margin-left: 20px; margin-top: 10px;">
+                            <li>Check if Node.js app is running in Hostinger hPanel</li>
+                            <li>Verify the port number in your .htaccess file</li>
+                            <li>Ensure .htaccess is uploaded to public_html/</li>
+                            <li>Check Apache error logs in hPanel</li>
+                            <li>Restart your Node.js application</li>
+                        </ol>
+                        <p style="margin-top: 15px;"><strong>📖 See FIND_NODEJS_PORT_HOSTINGER.md for detailed instructions</strong></p>
+                    </div>
+                `;
+            }
+            
+            summaryContainer.innerHTML = summaryHTML;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+# Modenlo - Hostinger Node.js Hybrid Deployment (AUTO-DETECT)
+# This version attempts to automatically work with Hostinger's Node.js setup
+# ========================================================================
+
+# Enable rewrite engine
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# Redirect www to non-www (or vice versa - choose one)
+# OPTION A: Redirect www to non-www (RECOMMENDED)
+RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+# OPTION B: Redirect non-www to www (UNCOMMENT IF YOU PREFER www)
+# RewriteCond %{HTTP_HOST} !^www\. [NC]
+# RewriteCond %{HTTP_HOST} !^localhost [NC]
+# RewriteRule ^(.*)$ https://www.%{HTTP_HOST}/$1 [R=301,L]
+
+# Allow Let's Encrypt SSL validation
+RewriteCond %{REQUEST_URI} ^/\.well-known/acme-challenge/ [NC]
+RewriteRule ^(.*)$ - [L]
+
+# ========================================================================
+# HOSTINGER NODE.JS PROXY CONFIGURATION
+# ========================================================================
+
+# Serve static files directly (faster, reduces Node.js load)
+RewriteCond %{REQUEST_URI} \.(html|css|js|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot|pdf|txt)$ [NC]
+RewriteRule ^(.*)$ - [L]
+
+# Proxy API requests to Node.js application
+# This configuration works with Hostinger's Node.js app routing
+RewriteCond %{REQUEST_URI} ^/api/ [NC]
+RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+
+# ========================================================================
+# PROXY CONFIGURATION
+# ========================================================================
+
+<IfModule mod_proxy.c>
+    ProxyPreserveHost On
+    ProxyTimeout 300
+    
+    # Prevent proxy loops
+    ProxyErrorOverride Off
+    
+    # Enable reverse proxy
+    <IfModule mod_proxy_http.c>
+        ProxyPassReverse /api/ http://127.0.0.1:3000/api/
+    </IfModule>
+</IfModule>
+
+# ========================================================================
+# HEADERS & SECURITY
+# ========================================================================
+
+<IfModule mod_headers.c>
+    # CORS headers (if needed for cross-domain requests)
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Session-Id"
+    
+    # Security headers
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# ========================================================================
+# ERROR HANDLING
+# ========================================================================
+
+# Don't show directory listings
+Options -Indexes
+
+# Custom error pages (optional - create these if you want)
+# ErrorDocument 404 /404.html
+# ErrorDocument 500 /500.html
+# ErrorDocument 502 /502.html
+# ErrorDocument 503 /503.html
+
+# ========================================================================
+# INSTRUCTIONS:
+# ========================================================================
+# 1. Rename this file to just ".htaccess"
+# 2. Upload to your public_html/ directory via FileZilla
+# 3. Make sure Node.js app is running in hPanel
+# 4. Test by visiting: https://modenlo.com/api/health
+# 5. If you get 502 errors, the port might not be 3000
+#    - In that case, use .htaccess.HOSTINGER_PORT instead
+# ========================================================================

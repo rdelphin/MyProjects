@@ -1,0 +1,111 @@
+# Modenlo - Hostinger Node.js Hybrid Deployment (MANUAL PORT)
+# This version requires you to enter the correct port number
+# Follow FIND_NODEJS_PORT_HOSTINGER.md to find your port
+# ========================================================================
+
+# Enable rewrite engine
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# Redirect www to non-www
+RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+# Allow Let's Encrypt SSL validation
+RewriteCond %{REQUEST_URI} ^/\.well-known/acme-challenge/ [NC]
+RewriteRule ^(.*)$ - [L]
+
+# ========================================================================
+# CONFIGURE YOUR PORT HERE
+# ========================================================================
+# Find your Node.js port in hPanel and replace XXXXX below
+# Common Hostinger ports: 3000, 3001, 20000-20099, 40000-40099
+# ========================================================================
+
+# SET YOUR PORT HERE (replace XXXXX with actual port number)
+RewriteRule .* - [E=NODEJS_PORT:XXXXX]
+
+# ========================================================================
+# EXAMPLES OF HOW TO SET THE PORT:
+# ========================================================================
+# If your port is 3000, use:
+# RewriteRule .* - [E=NODEJS_PORT:3000]
+#
+# If your port is 20045, use:
+# RewriteRule .* - [E=NODEJS_PORT:20045]
+#
+# Replace the XXXXX above with your actual port number!
+# ========================================================================
+
+# ========================================================================
+# PROXY CONFIGURATION (DO NOT EDIT BELOW THIS LINE)
+# ========================================================================
+
+# Serve static files directly
+RewriteCond %{REQUEST_URI} \.(html|css|js|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot|pdf|txt)$ [NC]
+RewriteRule ^(.*)$ - [L]
+
+# Proxy API requests to Node.js application on specified port
+RewriteCond %{REQUEST_URI} ^/api/ [NC]
+RewriteRule ^(.*)$ http://127.0.0.1:%{ENV:NODEJS_PORT}/$1 [P,L]
+
+# Fallback: If API path doesn't match, try anyway (helps with debugging)
+RewriteCond %{REQUEST_URI} ^/api
+RewriteRule ^(.*)$ http://localhost:%{ENV:NODEJS_PORT}/$1 [P,L]
+
+<IfModule mod_proxy.c>
+    ProxyPreserveHost On
+    ProxyTimeout 300
+    ProxyErrorOverride Off
+    
+    <IfModule mod_proxy_http.c>
+        # This will be set dynamically based on NODEJS_PORT
+        ProxyPass /api/ http://127.0.0.1:%{ENV:NODEJS_PORT}/api/
+        ProxyPassReverse /api/ http://127.0.0.1:%{ENV:NODEJS_PORT}/api/
+    </IfModule>
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Session-Id"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+Options -Indexes
+
+# ========================================================================
+# SETUP INSTRUCTIONS:
+# ========================================================================
+# STEP 1: Find your Node.js port
+#         - Go to hPanel → Node.js → Your Application
+#         - Look for "Port" or "Application URL"
+#         - Common ports: 3000, 20000-20099, 40000-40099
+#
+# STEP 2: Edit this file
+#         - Find the line: RewriteRule .* - [E=NODEJS_PORT:XXXXX]
+#         - Replace XXXXX with your actual port number
+#         - Save the file
+#
+# STEP 3: Rename this file
+#         - Rename to just ".htaccess" (remove everything else)
+#
+# STEP 4: Upload via FileZilla
+#         - Upload to public_html/ directory
+#         - Overwrite if asked
+#
+# STEP 5: Test
+#         - Visit: https://modenlo.com/api/health
+#         - Should see JSON response: {"success":true,...}
+#         - If 502 error, port is wrong - double check in hPanel
+#
+# STEP 6: Verify full site
+#         - Test framer tool loads frame options
+#         - Test placing an order
+#         - Check for "failed to fetch" errors
+# ========================================================================

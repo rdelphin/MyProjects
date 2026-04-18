@@ -1,0 +1,17 @@
+# Modenlo - ALTERNATIVE .htaccess for Hostinger Node.js
+# Use this if the main fixed version doesn't work
+# This version lets Hostinger's Node.js panel handle ALL routing
+
+# Enable rewrite engine
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# Allow Let's Encrypt SSL validation
+RewriteCond %{REQUEST_URI} ^/\.well-known/acme-challenge/ [NC]
+RewriteRule ^(.*)$ - [L]
+
+# END - Let Hostinger's Node.js configuration handle the rest
+# This works when you've set the "Application URL" in hPanel to point to your domain
