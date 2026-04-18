@@ -57,6 +57,27 @@ const upload = multer({
 // Simple in-memory session store (in production, use Redis or database)
 const sessions = new Map();
 
+// Temporary image storage for two-stage upload (images expire after 1 hour)
+const tempImageStore = new Map();
+
+// Auto-cleanup expired images every 10 minutes
+setInterval(() => {
+    const now = Date.now();
+    const oneHour = 60 * 60 * 1000;
+    let cleanedCount = 0;
+    
+    for (const [imageId, imageData] of tempImageStore.entries()) {
+        if (now - imageData.uploadedAt > oneHour) {
+            tempImageStore.delete(imageId);
+            cleanedCount++;
+        }
+    }
+    
+    if (cleanedCount > 0) {
+        console.log(`[CLEANUP] Removed ${cleanedCount} expired images from temp store`);
+    }
+}, 10 * 60 * 1000); // Every 10 minutes
+
 // Admin credentials from environment variables
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
@@ -966,12 +987,106 @@ app.patch('/api/admin/clocks/:id/availability', requireAdmin, async (req, res) =
     }
 });
 
+// IMAGE UPLOAD ENDPOINT (Multipart/Form-Data)
+app.post('/api/upload-image', upload.single('image'), async (req, res) => {
+    try {
+        console.log('[IMAGE UPLOAD] New image upload request (multipart/form-data)');
+        
+        const itemId = req.body.itemId;
+        const imageFile = req.file;
+        
+        if (!imageFile) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'No image file provided' 
+            });
+        }
+        
+        if (!itemId) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Missing itemId' 
+            });
+        }
+        
+        // Read the uploaded file
+        const imageBuffer = await fs.readFile(imageFile.path);
+        
+        // Convert to base64 for storage (backend only - keeps compatibility with email system)
+        const base64Image = `data:${imageFile.mimetype};base64,${imageBuffer.toString('base64')}`;
+        
+        // Generate unique image ID
+        const imageId = `IMG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        // Store in temporary memory
+        tempImageStore.set(imageId, {
+            imageData: base64Image,
+            itemId: itemId,
+            uploadedAt: Date.now(),
+            size: imageBuffer.length,
+            mimeType: imageFile.mimetype
+        });
+        
+        // Delete the temp file from disk
+        await fs.unlink(imageFile.path);
+        
+        const sizeMB = (imageBuffer.length / 1024 / 1024).toFixed(2);
+        console.log(`[IMAGE UPLOAD] Stored image ${imageId} (${sizeMB}MB)`);
+        console.log(`[IMAGE UPLOAD] Total images in store: ${tempImageStore.size}`);
+        
+        res.json({ 
+            success: true, 
+            imageId: imageId,
+            size: imageBuffer.length,
+            sizeMB: sizeMB
+        });
+        
+    } catch (error) {
+        console.error('[IMAGE UPLOAD] Error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to upload image: ' + error.message 
+        });
+    }
+});
+
+// Get image by ID (for verification/debugging)
+app.get('/api/image/:imageId', (req, res) => {
+    try {
+        const { imageId } = req.params;
+        const imageData = tempImageStore.get(imageId);
+        
+        if (!imageData) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Image not found or expired' 
+            });
+        }
+        
+        res.json({
+            success: true,
+            imageId,
+            size: imageData.size,
+            uploadedAt: new Date(imageData.uploadedAt).toISOString(),
+            mimeType: imageData.mimeType
+        });
+        
+    } catch (error) {
+        console.error('[IMAGE RETRIEVAL] Error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to retrieve image' 
+        });
+    }
+});
+
 // HEALTH CHECK ROUTE
 app.get('/api/health', (req, res) => {
     res.json({ 
         success: true, 
         message: 'API is running',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        tempImagesCount: tempImageStore.size
     });
 });
 
@@ -1038,6 +1153,42 @@ app.post('/api/orders', async (req, res) => {
             });
         }
         
+        // Process items: replace imageIds with actual imageData
+        const processedItems = orderData.order.items.map((item, index) => {
+            // Check if item has imageId (new multipart method) or imageData (old base64 method)
+            if (item.imageId) {
+                console.log(`[ORDER] Retrieving image for item ${index + 1}: ${item.imageId}`);
+                const imageInfo = tempImageStore.get(item.imageId);
+                
+                if (!imageInfo) {
+                    console.warn(`[ORDER] Image not found for item ${index + 1}: ${item.imageId}`);
+                    return item; // Return item without imageData (will be handled gracefully)
+                }
+                
+                const sizeMB = (imageInfo.size / 1024 / 1024).toFixed(2);
+                console.log(`[ORDER] Found image ${item.imageId}, size: ${sizeMB}MB`);
+                
+                // Replace imageId with actual imageData
+                return {
+                    ...item,
+                    imageData: imageInfo.imageData,
+                    imageId: undefined // Remove imageId from final order
+                };
+            }
+            
+            // Item already has imageData (backward compatibility with old base64 method)
+            return item;
+        });
+        
+        // Update order data with processed items
+        const processedOrderData = {
+            ...orderData,
+            order: {
+                ...orderData.order,
+                items: processedItems
+            }
+        };
+        
         // Generate order ID
         const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
         console.log('[ORDER] Generated order ID:', orderId);
@@ -1045,10 +1196,10 @@ app.post('/api/orders', async (req, res) => {
         // Read existing orders
         const ordersFile = await readOrdersData();
         
-        // Create order record
+        // Create order record with full imageData
         const order = {
             orderId,
-            ...orderData,
+            ...processedOrderData,
             status: 'pending',
             createdAt: new Date().toISOString()
         };
@@ -1057,6 +1208,14 @@ app.post('/api/orders', async (req, res) => {
         ordersFile.orders.push(order);
         await writeOrdersData(ordersFile);
         console.log('[ORDER] Order saved to file');
+        
+        // Clean up temp images after successful order
+        orderData.order.items.forEach((item, index) => {
+            if (item.imageId && tempImageStore.has(item.imageId)) {
+                tempImageStore.delete(item.imageId);
+                console.log(`[ORDER] Cleaned up temp image: ${item.imageId}`);
+            }
+        });
         
         // Send customer confirmation email
         const customerEmail = await emailService.sendCustomerConfirmation(orderData);

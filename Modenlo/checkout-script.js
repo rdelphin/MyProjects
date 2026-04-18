@@ -57,6 +57,88 @@ async function retryFetch(url, options, maxRetries = 3) {
     throw lastError;
 }
 
+// Upload single image using multipart/form-data (NEW - Better for mobile!)
+async function uploadImageBlob(imageDataUrl, itemId) {
+    return new Promise((resolve, reject) => {
+        // Convert data URL to blob
+        fetch(imageDataUrl)
+            .then(res => res.blob())
+            .then(async (blob) => {
+                // Create FormData with blob
+                const formData = new FormData();
+                formData.append('image', blob, `${itemId}.jpg`);
+                formData.append('itemId', itemId);
+                
+                console.log(`[IMAGE UPLOAD] Uploading image for item ${itemId}, size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+                
+                try {
+                    // Upload with retry logic
+                    const response = await retryFetch(`${API_BASE}/upload-image`, {
+                        method: 'POST',
+                        body: formData // No Content-Type header - browser sets it with boundary
+                    }, 3);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        console.log(`[IMAGE UPLOAD] Successfully uploaded ${itemId}: ${result.imageId} (${result.sizeMB}MB)`);
+                        resolve(result.imageId);
+                    } else {
+                        reject(new Error(result.error || 'Upload failed'));
+                    }
+                } catch (error) {
+                    console.error(`[IMAGE UPLOAD] Error uploading ${itemId}:`, error);
+                    reject(error);
+                }
+            })
+            .catch(error => {
+                console.error(`[IMAGE UPLOAD] Error converting to blob:`, error);
+                reject(error);
+            });
+    });
+}
+
+// Upload all images and return items with imageIds
+async function uploadAllImages(items, submitButton, originalButtonText) {
+    const uploadedItems = [];
+    
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        
+        // Update button with progress
+        submitButton.textContent = `Uploading images (${i + 1}/${items.length})...`;
+        
+        try {
+            if (item.imageData) {
+                // Upload image and get imageId
+                const imageId = await uploadImageBlob(item.imageData, item.id);
+                
+                // Replace imageData with imageId (much smaller payload!)
+                uploadedItems.push({
+                    ...item,
+                    imageId: imageId,
+                    imageData: undefined, // Remove large base64 string
+                    previewImage: item.previewImage // Keep preview for emails
+                });
+            } else {
+                // No image data (shouldn't happen, but handle gracefully)
+                uploadedItems.push(item);
+            }
+        } catch (error) {
+            console.error(`[IMAGE UPLOAD] Failed to upload image ${i + 1}:`, error);
+            throw new Error(`Failed to upload image ${i + 1}: ${error.message}`);
+        }
+    }
+    
+    console.log(`[IMAGE UPLOAD] Successfully uploaded ${items.length} images`);
+    return uploadedItems;
+}
+
 // DOM Elements
 const checkoutForm = document.getElementById('checkoutForm');
 const orderItemsEl = document.getElementById('orderItems');
@@ -110,7 +192,7 @@ function getFullCart() {
     return cart ? JSON.parse(cart) : [];
 }
 
-// Handle form submission
+// Handle form submission - NEW TWO-STAGE UPLOAD
 async function handleCheckout(e) {
     e.preventDefault();
     
@@ -138,10 +220,9 @@ async function handleCheckout(e) {
         return;
     }
     
-    console.log('[CHECKOUT] API is healthy, proceeding with order submission...');
-    submitButton.textContent = 'Processing Order...';
+    console.log('[CHECKOUT] API is healthy, proceeding with image uploads...');
     
-    // Get full cart items with imageData (not in checkoutData to avoid localStorage quota)
+    // Get full cart items with imageData
     const fullCart = getFullCart();
     
     // Merge checkout items with full cart items to get imageData
@@ -149,39 +230,47 @@ async function handleCheckout(e) {
         const cartItem = fullCart.find(item => item.id === checkoutItem.id);
         return {
             ...checkoutItem,
-            imageData: cartItem ? cartItem.imageData : null  // Add full image data
+            imageData: cartItem ? cartItem.imageData : null,  // Full image data for upload
+            previewImage: cartItem ? cartItem.previewImage : null  // Preview for emails
         };
     });
     
-    // Collect form data
-    const orderData = {
-        contact: {
-            email: document.getElementById('email').value
-        },
-        shipping: {
-            firstName: document.getElementById('firstName').value,
-            lastName: document.getElementById('lastName').value,
-            address: document.getElementById('address').value,
-            city: document.getElementById('city').value,
-            state: document.getElementById('state').value,
-            zipCode: document.getElementById('zipCode').value,
-            phone: document.getElementById('phone').value
-        },
-        payment: {
-            method: document.querySelector('input[name="paymentMethod"]:checked').value
-        },
-        order: {
-            items: fullOrderItems,  // Use items with full imageData
-            totals: checkoutData.totals,
-            orderDate: new Date().toISOString()
-        }
-    };
-    
     try {
-        // Log the API endpoint for debugging
-        console.log('[CHECKOUT] Submitting order to:', `${API_BASE}/orders`);
-        console.log('[CHECKOUT] Current origin:', window.location.origin);
-        console.log('[CHECKOUT] Order data size:', JSON.stringify(orderData).length, 'bytes');
+        // STAGE 1: Upload all images first (multipart/form-data - better for mobile!)
+        console.log('[CHECKOUT] Stage 1: Uploading images...');
+        const uploadedItems = await uploadAllImages(fullOrderItems, submitButton, originalButtonText);
+        
+        // STAGE 2: Submit order with imageIds (tiny payload - fast!)
+        console.log('[CHECKOUT] Stage 2: Submitting order...');
+        submitButton.textContent = 'Processing Order...';
+        
+        // Collect form data
+        const orderData = {
+            contact: {
+                email: document.getElementById('email').value
+            },
+            shipping: {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                address: document.getElementById('address').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                zipCode: document.getElementById('zipCode').value,
+                phone: document.getElementById('phone').value
+            },
+            payment: {
+                method: document.querySelector('input[name="paymentMethod"]:checked').value
+            },
+            order: {
+                items: uploadedItems,  // Use items with imageIds (not imageData!)
+                totals: checkoutData.totals,
+                orderDate: new Date().toISOString()
+            }
+        };
+        
+        // Log the order payload size (should be much smaller now!)
+        const payloadSize = JSON.stringify(orderData).length;
+        console.log('[CHECKOUT] Order payload size:', payloadSize, 'bytes (~' + (payloadSize / 1024).toFixed(2) + 'KB)');
         
         // Submit order to backend with retry logic
         const response = await retryFetch(`${API_BASE}/orders`, {
@@ -195,14 +284,12 @@ async function handleCheckout(e) {
         // Log response details for debugging
         console.log('[CHECKOUT] Response status:', response.status);
         console.log('[CHECKOUT] Response statusText:', response.statusText);
-        console.log('[CHECKOUT] Response content-type:', response.headers.get('content-type'));
         
         // Check if response is ok before parsing
         if (!response.ok) {
             // Try to get error message from response
             let errorMessage = `Server error: ${response.status} ${response.statusText}`;
             
-            // Try to parse as JSON first
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 try {
@@ -212,15 +299,11 @@ async function handleCheckout(e) {
                     console.error('Failed to parse error response as JSON:', e);
                 }
             } else {
-                // If not JSON, get text to help debug
                 const errorText = await response.text();
                 console.error('Non-JSON response received:', errorText.substring(0, 500));
                 
-                // Check if it's an HTML error page
                 if (errorText.includes('<!DOCTYPE') || errorText.includes('<html')) {
                     errorMessage = 'Server returned an error page. Please check if the server is running correctly.';
-                } else {
-                    errorMessage = `Server error: ${errorText.substring(0, 100)}`;
                 }
             }
             
@@ -231,6 +314,8 @@ async function handleCheckout(e) {
         const result = await response.json();
         
         if (result.success) {
+            console.log('[CHECKOUT] Order completed successfully:', result.orderId);
+            
             // Store order for success page
             const orderWithId = {
                 ...orderData,
@@ -250,37 +335,25 @@ async function handleCheckout(e) {
             throw new Error(result.error || 'Failed to process order');
         }
     } catch (error) {
-        console.error('[CHECKOUT] Error submitting order:', error);
+        console.error('[CHECKOUT] Error during checkout:', error);
         console.error('[CHECKOUT] Error type:', error.name);
         console.error('[CHECKOUT] Error stack:', error.stack);
         
-        // Provide more helpful error message based on error type
+        // Provide helpful error message
         let userMessage = 'Error processing your order. Please try again.';
-        let technicalDetails = error.message;
         
-        if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+        if (error.message.includes('Failed to upload image')) {
+            userMessage = `${error.message}\n\nPlease check your internet connection and try again.`;
+        } else if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
             userMessage = 'Unable to connect to the order service.\n\n' +
                          'This may be due to:\n' +
                          '• Poor internet connection\n' +
-                         '• Server maintenance\n' +
-                         '• Browser security settings\n\n' +
+                         '• Server maintenance\n\n' +
                          'Please check your connection and try again.';
-            technicalDetails = 'Network request failed after 3 attempts';
-        } else if (error.message.includes('CORS')) {
-            userMessage = 'Connection blocked by security policy.\n\n' +
-                         'Please try:\n' +
-                         '• Clearing your browser cache\n' +
-                         '• Using a different browser\n' +
-                         '• Contacting support if the issue persists';
-            technicalDetails = 'CORS policy error';
-        } else if (error.message.includes('Server returned an error page') || error.message.includes('Server error')) {
+        } else if (error.message.includes('Server returned an error page')) {
             userMessage = 'The order service is temporarily unavailable.\n\n' +
-                         'Please try again in a few moments.\n' +
-                         'If the problem persists, contact support.';
+                         'Please try again in a few moments.';
         }
-        
-        console.log('[CHECKOUT] User message:', userMessage);
-        console.log('[CHECKOUT] Technical details:', technicalDetails);
         
         alert(userMessage);
         
