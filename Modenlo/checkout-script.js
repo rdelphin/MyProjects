@@ -1,5 +1,10 @@
-// API Configuration - works on localhost, mobile devices, and production
-const API_BASE = `${window.location.origin}/api`;
+// API Configuration - works on localhost, mobile devices, production, AND file:// protocol
+const API_BASE = window.location.protocol === 'file:' 
+    ? 'http://localhost:3000/api'  // Use localhost when opened as file://
+    : `${window.location.origin}/api`;  // Use current origin when via web server
+
+console.log('[CONFIG] Protocol:', window.location.protocol);
+console.log('[CONFIG] API_BASE:', API_BASE);
 
 // Connection check function
 async function checkAPIHealth() {

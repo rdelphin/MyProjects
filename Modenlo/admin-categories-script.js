@@ -1,6 +1,8 @@
 // Admin Categories Management Script
-// API Configuration - works on localhost, mobile devices, and production
-const API_BASE = `${window.location.origin}/api`;
+// API Configuration - works on localhost, mobile devices, production, AND file:// protocol
+const API_BASE = window.location.protocol === 'file:' 
+    ? 'http://localhost:3000/api'  // Use localhost when opened as file://
+    : `${window.location.origin}/api`;  // Use current origin when via web server
 
 // Get session ID from localStorage
 const sessionId = localStorage.getItem('modenloSession');
