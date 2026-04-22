@@ -333,78 +333,80 @@ async function downloadImage(orderId, itemIndex, buttonElement) {
         const btn = buttonElement;
         const originalText = btn.textContent;
         btn.disabled = true;
-        btn.textContent = '⏳ Generating...';
+        btn.textContent = '⏳ Downloading...';
 
-        // Generate high-res image from item data
+        const isClock = item.productType === 'clock';
+        let filename;
+
+        if (isClock) {
+            filename = `${orderId}-item${itemIndex + 1}-clock-${item.frameSizeName}in.png`;
+        } else {
+            filename = `${orderId}-item${itemIndex + 1}-${item.frameSize}-${item.orientation}.png`;
+        }
+
+        // NEW SYSTEM: Download full-resolution image from server using imageId
+        if (item.imageId) {
+            console.log('[DOWNLOAD] Fetching full-res image from server:', item.imageId);
+            
+            try {
+                // Fetch the full-resolution image from the server
+                const response = await fetch(`${API_BASE}/download-image/${item.imageId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to download image: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                console.log('[DOWNLOAD] Downloaded full-res image:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
+                
+                // Download the blob directly (it's already at full 300 DPI resolution!)
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                btn.disabled = false;
+                btn.textContent = originalText;
+                alert('Full-resolution image downloaded successfully!');
+                return;
+                
+            } catch (error) {
+                console.error('[DOWNLOAD] Error fetching image from server:', error);
+                alert('Error downloading image from server: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = originalText;
+                return;
+            }
+        }
+
+        // OLD SYSTEM FALLBACK: Generate from stored imageData (may have reduced quality)
         const imageData = item.imageData;
         if (!imageData) {
-            alert('Image data not found in order');
+            alert('Image data not found in order. This order may be from an older version.');
             btn.disabled = false;
             btn.textContent = originalText;
             return;
         }
 
+        console.warn('[DOWNLOAD] Using old image storage format - quality may be reduced');
+        btn.textContent = '⏳ Generating (old format)...';
+
         // Create image from data URL
         const img = new Image();
         img.onload = function() {
             try {
-                // Create canvas for output
+                // For old format: directly download the stored image
+                // (It's already been processed, but may be degraded quality)
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-
-                const isClock = item.productType === 'clock';
-                let filename;
-
-                if (isClock) {
-                    // For clocks: circular, use diameter
-                    const diameter = parseInt(item.frameSizeName) * 300; // 300 DPI
-                    canvas.width = diameter;
-                    canvas.height = diameter;
-                    filename = `${orderId}-item${itemIndex + 1}-clock-${item.frameSizeName}in.png`;
-                } else {
-                    // For frames: rectangular, use frameSize and orientation
-                    // The imageData already contains the properly oriented final image from the cart
-                    // We just need to determine the correct output dimensions
-                    
-                    // Parse the frame size (e.g., "35x12" means 35 wide × 12 tall in portrait base)
-                    const frameSizeParts = item.frameSize.split('x');
-                    const firstNum = parseInt(frameSizeParts[0]);
-                    const secondNum = parseInt(frameSizeParts[1]);
-                    
-                    // Determine which is larger to know the base orientation
-                    let portraitWidth, portraitHeight;
-                    
-                    if (firstNum < secondNum) {
-                        // Normal case: first number is smaller (e.g., 8x10, 12x35)
-                        portraitWidth = firstNum * 300;
-                        portraitHeight = secondNum * 300;
-                    } else {
-                        // Inverted case: first number is larger (e.g., 35x12, 31x11)
-                        // This means the size name itself represents landscape
-                        portraitWidth = secondNum * 300;
-                        portraitHeight = firstNum * 300;
-                    }
-
-                    if (item.orientation === 'landscape') {
-                        // Swap for landscape
-                        canvas.width = portraitHeight;
-                        canvas.height = portraitWidth;
-                    } else {
-                        // Keep portrait
-                        canvas.width = portraitWidth;
-                        canvas.height = portraitHeight;
-                    }
-                    filename = `${orderId}-item${itemIndex + 1}-${item.frameSize}-${item.orientation}.png`;
-                }
-
-                // Fill with white background
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                // IMPORTANT: The imageData is already the final cropped/positioned image from the preview
-                // We just need to scale it up to the print dimensions maintaining the exact composition
-                // Draw the image to fill the entire canvas (it's already cropped correctly)
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                ctx.drawImage(img, 0, 0);
 
                 // Download
                 canvas.toBlob(function(blob) {
@@ -427,7 +429,7 @@ async function downloadImage(orderId, itemIndex, buttonElement) {
 
                         btn.disabled = false;
                         btn.textContent = originalText;
-                        alert('Image downloaded successfully!');
+                        alert('Image downloaded (Note: Old format - quality may be reduced)');
                     } catch (error) {
                         console.error('Download error:', error);
                         alert('Error downloading image: ' + error.message);
@@ -450,7 +452,6 @@ async function downloadImage(orderId, itemIndex, buttonElement) {
         };
 
         img.src = imageData;
-
     } catch (error) {
         console.error('Error downloading image:', error);
         alert('Error downloading image: ' + error.message);

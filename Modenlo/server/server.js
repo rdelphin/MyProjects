@@ -19,8 +19,9 @@ const DOWNLOADS_FILE = path.join(__dirname, 'data', 'downloads.json');
 const CATEGORIES_FILE = path.join(__dirname, 'data', 'categories.json');
 const CLOCKS_FILE = path.join(__dirname, 'data', 'clocks.json');
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads', 'mounts');
+const ORIGINALS_DIR = path.join(__dirname, '..', 'uploads', 'originals');
 
-// Configure multer for file uploads
+// Configure multer for mount uploads
 const storage = multer.diskStorage({
     destination: async function (req, file, cb) {
         try {
@@ -43,6 +44,39 @@ const upload = multer({
     storage: storage,
     limits: {
         fileSize: 5 * 1024 * 1024 // 5MB max file size
+    },
+    fileFilter: function (req, file, cb) {
+        // Accept only images
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'));
+        }
+    }
+});
+
+// Configure multer for original images (disk storage - high resolution)
+const originalsStorage = multer.diskStorage({
+    destination: async function (req, file, cb) {
+        try {
+            // Create originals directory if it doesn't exist
+            await fs.mkdir(ORIGINALS_DIR, { recursive: true });
+            cb(null, ORIGINALS_DIR);
+        } catch (error) {
+            cb(error);
+        }
+    },
+    filename: function (req, file, cb) {
+        // Generate unique filename with timestamp
+        const imageId = `original-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        cb(null, `${imageId}.png`);
+    }
+});
+
+const uploadOriginal = multer({
+    storage: originalsStorage,
+    limits: {
+        fileSize: 50 * 1024 * 1024 // 50MB max for high-res images
     },
     fileFilter: function (req, file, cb) {
         // Accept only images
@@ -987,10 +1021,10 @@ app.patch('/api/admin/clocks/:id/availability', requireAdmin, async (req, res) =
     }
 });
 
-// IMAGE UPLOAD ENDPOINT (Multipart/Form-Data)
-app.post('/api/upload-image', upload.single('image'), async (req, res) => {
+// IMAGE UPLOAD ENDPOINT - Save to disk (NEW SYSTEM)
+app.post('/api/upload-image', uploadOriginal.single('image'), async (req, res) => {
     try {
-        console.log('[IMAGE UPLOAD] New image upload request (multipart/form-data)');
+        console.log('[IMAGE UPLOAD] New image upload request - saving to disk');
         
         const itemId = req.body.itemId;
         const imageFile = req.file;
@@ -1002,43 +1036,25 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
             });
         }
         
-        if (!itemId) {
-            return res.status(400).json({ 
-                success: false, 
-                error: 'Missing itemId' 
-            });
-        }
+        // Extract imageId from filename (without extension)
+        const imageId = path.basename(imageFile.filename, '.png');
         
-        // Read the uploaded file
-        const imageBuffer = await fs.readFile(imageFile.path);
+        // Get file stats
+        const stats = await fs.stat(imageFile.path);
+        const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
         
-        // Convert to base64 for storage (backend only - keeps compatibility with email system)
-        const base64Image = `data:${imageFile.mimetype};base64,${imageBuffer.toString('base64')}`;
-        
-        // Generate unique image ID
-        const imageId = `IMG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        
-        // Store in temporary memory
-        tempImageStore.set(imageId, {
-            imageData: base64Image,
-            itemId: itemId,
-            uploadedAt: Date.now(),
-            size: imageBuffer.length,
-            mimeType: imageFile.mimetype
-        });
-        
-        // Delete the temp file from disk
-        await fs.unlink(imageFile.path);
-        
-        const sizeMB = (imageBuffer.length / 1024 / 1024).toFixed(2);
-        console.log(`[IMAGE UPLOAD] Stored image ${imageId} (${sizeMB}MB)`);
-        console.log(`[IMAGE UPLOAD] Total images in store: ${tempImageStore.size}`);
+        console.log(`[IMAGE UPLOAD] Saved to disk: ${imageFile.filename} (${sizeMB}MB)`);
+        console.log(`[IMAGE UPLOAD] Location: ${ORIGINALS_DIR}`);
+        console.log(`[IMAGE UPLOAD] Image ID: ${imageId}`);
         
         res.json({ 
             success: true, 
             imageId: imageId,
-            size: imageBuffer.length,
-            sizeMB: sizeMB
+            filename: imageFile.filename,
+            path: imageFile.path,
+            size: stats.size,
+            sizeMB: sizeMB,
+            message: 'Image saved to disk successfully'
         });
         
     } catch (error) {
@@ -1046,6 +1062,51 @@ app.post('/api/upload-image', upload.single('image'), async (req, res) => {
         res.status(500).json({ 
             success: false, 
             error: 'Failed to upload image: ' + error.message 
+        });
+    }
+});
+
+// DOWNLOAD IMAGE ENDPOINT - Serve original from disk
+app.get('/api/download-image/:imageId', async (req, res) => {
+    try {
+        const { imageId } = req.params;
+        
+        // Construct file path
+        const filePath = path.join(ORIGINALS_DIR, `${imageId}.png`);
+        
+        console.log(`[DOWNLOAD] Request for image: ${imageId}`);
+        console.log(`[DOWNLOAD] File path: ${filePath}`);
+        
+        // Check if file exists
+        try {
+            await fs.access(filePath);
+        } catch (error) {
+            console.error(`[DOWNLOAD] File not found: ${filePath}`);
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Image not found' 
+            });
+        }
+        
+        // Get file stats
+        const stats = await fs.stat(filePath);
+        const sizeMB = (stats.size / 1024 / 1024).toFixed(2);
+        
+        console.log(`[DOWNLOAD] Serving file: ${imageId}.png (${sizeMB}MB)`);
+        
+        // Set headers for download
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Content-Disposition', `attachment; filename="${imageId}.png"`);
+        res.setHeader('Content-Length', stats.size);
+        
+        // Send file
+        res.sendFile(filePath);
+        
+    } catch (error) {
+        console.error('[DOWNLOAD] Error:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to download image: ' + error.message 
         });
     }
 });
@@ -1153,30 +1214,17 @@ app.post('/api/orders', async (req, res) => {
             });
         }
         
-        // Process items: replace imageIds with actual imageData
+        // NEW SYSTEM: Keep imageId references in order (much smaller JSON!)
+        // Only fetch imageData when needed (for emails)
         const processedItems = orderData.order.items.map((item, index) => {
-            // Check if item has imageId (new multipart method) or imageData (old base64 method)
             if (item.imageId) {
-                console.log(`[ORDER] Retrieving image for item ${index + 1}: ${item.imageId}`);
-                const imageInfo = tempImageStore.get(item.imageId);
-                
-                if (!imageInfo) {
-                    console.warn(`[ORDER] Image not found for item ${index + 1}: ${item.imageId}`);
-                    return item; // Return item without imageData (will be handled gracefully)
-                }
-                
-                const sizeMB = (imageInfo.size / 1024 / 1024).toFixed(2);
-                console.log(`[ORDER] Found image ${item.imageId}, size: ${sizeMB}MB`);
-                
-                // Replace imageId with actual imageData
-                return {
-                    ...item,
-                    imageData: imageInfo.imageData,
-                    imageId: undefined // Remove imageId from final order
-                };
+                console.log(`[ORDER] Item ${index + 1} uses disk-based storage: ${item.imageId}`);
+                // Keep imageId - image is on disk!
+                return item;
             }
             
-            // Item already has imageData (backward compatibility with old base64 method)
+            // OLD SYSTEM: Item has imageData embedded (backward compatibility)
+            console.log(`[ORDER] Item ${index + 1} uses old embedded imageData format`);
             return item;
         });
         
@@ -1674,6 +1722,7 @@ app.get('/api/download/:orderId/:token', async (req, res) => {
         res.status(500).json({ success: false, error: 'Failed to process download' });
     }
 });
+
 
 // Start server
 app.listen(PORT, () => {

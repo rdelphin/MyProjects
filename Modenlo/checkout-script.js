@@ -62,6 +62,105 @@ async function retryFetch(url, options, maxRetries = 3) {
     throw lastError;
 }
 
+// Regenerate full-resolution final image from original image + transform parameters
+function regenerateFullResolutionImage(originalImageData, transformParams, frameSize, orientation) {
+    return new Promise((resolve, reject) => {
+        // Load the original high-res image
+        const img = new Image();
+        img.onload = function() {
+            console.log(`[REGEN] Loaded original image: ${img.width}x${img.height}px`);
+            
+            // Get print dimensions at 300 DPI
+            const frameSizeParts = frameSize.split('x');
+            let printWidth, printHeight;
+            
+            if (orientation === 'portrait') {
+                printWidth = parseInt(frameSizeParts[0]) * 300;
+                printHeight = parseInt(frameSizeParts[1]) * 300;
+            } else {
+                printWidth = parseInt(frameSizeParts[1]) * 300;
+                printHeight = parseInt(frameSizeParts[0]) * 300;
+            }
+            
+            // Create output canvas at full print resolution
+            const outputCanvas = document.createElement('canvas');
+            const outputCtx = outputCanvas.getContext('2d');
+            outputCanvas.width = printWidth;
+            outputCanvas.height = printHeight;
+            
+            // Fill with white background
+            outputCtx.fillStyle = 'white';
+            outputCtx.fillRect(0, 0, printWidth, printHeight);
+            
+            // Calculate the crop and positioning (using same logic as script.js generateFinalImage)
+            const displaySize = 600; // The preview canvas size used during composition
+            const printAspect = printWidth / printHeight;
+            
+            // Calculate crop area in display coordinates
+            let cropWidth, cropHeight;
+            if (printAspect > 1) {
+                cropWidth = displaySize;
+                cropHeight = displaySize / printAspect;
+            } else {
+                cropHeight = displaySize;
+                cropWidth = displaySize * printAspect;
+            }
+            
+            // Calculate image dimensions with zoom
+            const zoom = transformParams.zoom / 100;
+            const imgAspect = img.width / img.height;
+            const cropAspect = cropWidth / cropHeight;
+            
+            let drawWidth, drawHeight;
+            if (imgAspect > cropAspect) {
+                drawWidth = cropWidth * zoom;
+                drawHeight = drawWidth / imgAspect;
+            } else {
+                drawHeight = cropHeight * zoom;
+                drawWidth = drawHeight * imgAspect;
+            }
+            
+            // Center the image and apply position offset (in display coordinates)
+            const displayX = (displaySize - drawWidth) / 2 + transformParams.position.x;
+            const displayY = (displaySize - drawHeight) / 2 + transformParams.position.y;
+            
+            // Calculate crop area position
+            let cropX, cropY;
+            if (printAspect > 1) {
+                cropX = 0;
+                cropY = (displaySize - cropHeight) / 2;
+            } else {
+                cropX = (displaySize - cropWidth) / 2;
+                cropY = 0;
+            }
+            
+            // Calculate which part of the original image to draw
+            const sourceX = (cropX - displayX) * (img.width / drawWidth);
+            const sourceY = (cropY - displayY) * (img.height / drawHeight);
+            const sourceWidth = cropWidth * (img.width / drawWidth);
+            const sourceHeight = cropHeight * (img.height / drawHeight);
+            
+            // Draw the cropped portion at FULL RESOLUTION
+            outputCtx.drawImage(
+                img,
+                sourceX, sourceY, sourceWidth, sourceHeight,
+                0, 0, printWidth, printHeight
+            );
+            
+            // Convert to data URL (PNG for lossless quality)
+            const fullResDataUrl = outputCanvas.toDataURL('image/png');
+            console.log(`[REGEN] Generated full-res image: ${printWidth}x${printHeight}px (${(fullResDataUrl.length / 1024 / 1024).toFixed(2)}MB)`);
+            resolve(fullResDataUrl);
+        };
+        
+        img.onerror = function() {
+            reject(new Error('Failed to load original image'));
+        };
+        
+        img.src = originalImageData;
+    });
+}
+
 // Upload single image using multipart/form-data (NEW - Better for mobile!)
 async function uploadImageBlob(imageDataUrl, itemId) {
     return new Promise((resolve, reject) => {
@@ -227,27 +326,35 @@ async function handleCheckout(e) {
     
     console.log('[CHECKOUT] API is healthy, proceeding with image uploads...');
     
-    // Get full cart items with imageData
+    // Get full cart items (images already uploaded to server!)
     const fullCart = getFullCart();
     
-    // Merge checkout items with full cart items to get imageData
+    console.log('[CHECKOUT] Preparing order with imageIds (images already on server)...');
+    submitButton.textContent = 'Processing order...';
+    
+    // Merge checkout items with cart items (imageIds already exist)
     const fullOrderItems = checkoutData.items.map(checkoutItem => {
         const cartItem = fullCart.find(item => item.id === checkoutItem.id);
+        
+        if (!cartItem) {
+            console.error(`[CHECKOUT] Cart item ${checkoutItem.id} not found`);
+            return checkoutItem;
+        }
+        
+        // Images already uploaded during "Add to Cart" - use existing imageId
         return {
             ...checkoutItem,
-            imageData: cartItem ? cartItem.imageData : null,  // Full image data for upload
-            previewImage: cartItem ? cartItem.previewImage : null  // Preview for emails
+            imageId: cartItem.imageId,  // Reference to file on server (already full-res!)
+            previewImage: cartItem.previewImage
         };
     });
     
     try {
-        // STAGE 1: Upload all images first (multipart/form-data - better for mobile!)
-        console.log('[CHECKOUT] Stage 1: Uploading images...');
-        const uploadedItems = await uploadAllImages(fullOrderItems, submitButton, originalButtonText);
+        // STAGE 1: Skip upload - images already on server from addToCart!
+        console.log('[CHECKOUT] Images already uploaded, proceeding to order submission...');
         
-        // STAGE 2: Submit order with imageIds (tiny payload - fast!)
-        console.log('[CHECKOUT] Stage 2: Submitting order...');
-        submitButton.textContent = 'Processing Order...';
+        // Submit order with imageIds (images already on server!)
+        console.log('[CHECKOUT] Submitting order...');
         
         // Collect form data
         const orderData = {
@@ -267,7 +374,7 @@ async function handleCheckout(e) {
                 method: document.querySelector('input[name="paymentMethod"]:checked').value
             },
             order: {
-                items: uploadedItems,  // Use items with imageIds (not imageData!)
+                items: fullOrderItems,  // Items with imageIds (pointing to server files!)
                 totals: checkoutData.totals,
                 orderDate: new Date().toISOString()
             }

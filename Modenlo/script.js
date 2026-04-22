@@ -16,7 +16,7 @@ let sessionId = localStorage.getItem('modenloSession');
 let isAdmin = false;
 
 // Minimum DPI threshold for print quality
-const MIN_DPI = 150;
+const MIN_DPI = 300;
 
 // Get frame dimensions based on size and orientation
 function getFrameDimensions(size, orientation) {
@@ -1533,7 +1533,7 @@ function updateCartBadge() {
     }
 }
 
-function addToCart(e) {
+async function addToCart(e) {
     console.log('Add to cart clicked'); // Debug log
     
     // Silently ignore if no image uploaded
@@ -1541,67 +1541,88 @@ function addToCart(e) {
         return;
     }
     
-    // Generate the FINAL framed image (this is what user will download)
-    const finalCanvas = generateFinalImage();
-    
-    // Create a medium-quality version for cart storage (to avoid quota issues)
-    const mediumCanvas = document.createElement('canvas');
-    const mediumCtx = mediumCanvas.getContext('2d');
-    
-    // Use 800px max dimension for cart storage
-    const maxDimension = 800;
-    const dimensions = getFrameDimensions(state.frameSize, state.orientation);
-    const scale = Math.min(maxDimension / dimensions.width, maxDimension / dimensions.height);
-    
-    mediumCanvas.width = dimensions.width * scale;
-    mediumCanvas.height = dimensions.height * scale;
-    
-    mediumCtx.drawImage(finalCanvas, 0, 0, mediumCanvas.width, mediumCanvas.height);
-    const finalImageData = mediumCanvas.toDataURL('image/jpeg', 0.8);
-    
-    // Generate preview thumbnail
-    const previewCanvas = document.createElement('canvas');
-    const previewCtx = previewCanvas.getContext('2d');
-    previewCanvas.width = 200;
-    previewCanvas.height = 200;
-    
-    // Draw scaled preview of the final image
-    const aspect = dimensions.width / dimensions.height;
-    
-    let previewWidth, previewHeight;
-    if (aspect > 1) {
-        previewWidth = 200;
-        previewHeight = 200 / aspect;
-    } else {
-        previewHeight = 200;
-        previewWidth = 200 * aspect;
+    // Disable button during upload
+    if (addToCartBtn) {
+        addToCartBtn.disabled = true;
+        addToCartBtn.textContent = 'Uploading...';
     }
     
-    const offsetX = (200 - previewWidth) / 2;
-    const offsetY = (200 - previewHeight) / 2;
+    try {
+        // Generate FULL-RESOLUTION final image (300 DPI)
+        console.log('[ADD TO CART] Generating full-resolution image...');
+        const finalCanvas = generateFinalImage();
+        const dimensions = getFrameDimensions(state.frameSize, state.orientation);
+        console.log(`[ADD TO CART] Image dimensions: ${dimensions.width}x${dimensions.height}px`);
+        
+        // Convert to PNG blob for lossless upload
+        const fullResBlob = await new Promise(resolve => finalCanvas.toBlob(resolve, 'image/png'));
+        console.log(`[ADD TO CART] Full-res blob size: ${(fullResBlob.size / 1024 / 1024).toFixed(2)}MB`);
+        
+        // Upload full-res image to server IMMEDIATELY
+        const itemId = Date.now();
+        const formData = new FormData();
+        formData.append('image', fullResBlob, `${itemId}.png`);
+        formData.append('itemId', itemId);
+        
+        console.log('[ADD TO CART] Uploading to server...');
+        const uploadResponse = await fetch(`${API_BASE}/upload-image`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!uploadResponse.ok) {
+            throw new Error(`Upload failed: ${uploadResponse.status}`);
+        }
+        
+        const uploadResult = await uploadResponse.json();
+        if (!uploadResult.success) {
+            throw new Error(uploadResult.error || 'Upload failed');
+        }
+        
+        console.log('[ADD TO CART] Upload successful, imageId:', uploadResult.imageId);
+        
+        // Generate preview thumbnail (small, for cart display only)
+        const previewCanvas = document.createElement('canvas');
+        const previewCtx = previewCanvas.getContext('2d');
+        previewCanvas.width = 200;
+        previewCanvas.height = 200;
+        
+        const aspect = dimensions.width / dimensions.height;
+        let previewWidth, previewHeight;
+        if (aspect > 1) {
+            previewWidth = 200;
+            previewHeight = 200 / aspect;
+        } else {
+            previewHeight = 200;
+            previewWidth = 200 * aspect;
+        }
+        
+        const offsetX = (200 - previewWidth) / 2;
+        const offsetY = (200 - previewHeight) / 2;
+        
+        previewCtx.fillStyle = 'white';
+        previewCtx.fillRect(0, 0, 200, 200);
+        previewCtx.drawImage(finalCanvas, offsetX, offsetY, previewWidth, previewHeight);
+        
+        const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
     
-    previewCtx.fillStyle = 'white';
-    previewCtx.fillRect(0, 0, 200, 200);
-    previewCtx.drawImage(mediumCanvas, offsetX, offsetY, previewWidth, previewHeight);
-    
-    const previewDataUrl = previewCanvas.toDataURL('image/jpeg', 0.6);
-    
-    // Calculate total price
-    let totalPrice = FRAME_SIZES[state.frameSize] ? FRAME_SIZES[state.frameSize].price : 0;
-    
-    // Create cart item with FINAL processed image
-    const cartItem = {
-        id: Date.now(),
-        frameSize: state.frameSize,
-        frameSizeName: FRAME_SIZES[state.frameSize] ? state.frameSize : '8x10',
-        framePrice: FRAME_SIZES[state.frameSize] ? FRAME_SIZES[state.frameSize].price : 0,
-        orientation: state.orientation,
-        zoom: state.currentZoom,
-        position: { ...state.imagePosition },
-        imageData: finalImageData,
-        previewImage: previewDataUrl,
-        addedAt: new Date().toISOString()
-    };
+        // Calculate total price
+        let totalPrice = FRAME_SIZES[state.frameSize] ? FRAME_SIZES[state.frameSize].price : 0;
+        
+        // Create cart item with imageId reference (full-res already on server!)
+        const cartItem = {
+            id: itemId,
+            imageId: uploadResult.imageId, // Reference to full-res image on server
+            frameSize: state.frameSize,
+            frameSizeName: FRAME_SIZES[state.frameSize] ? state.frameSize : '8x10',
+            framePrice: FRAME_SIZES[state.frameSize] ? FRAME_SIZES[state.frameSize].price : 0,
+            orientation: state.orientation,
+            zoom: state.currentZoom,
+            position: { ...state.imagePosition },
+            // Keep small preview for cart display
+            previewImage: previewDataUrl,
+            addedAt: new Date().toISOString()
+        };
     
     // Add clock-specific or regular frame-specific data
     if (isClock() && state.currentClockData) {
@@ -1638,13 +1659,32 @@ function addToCart(e) {
     
     cartItem.totalPrice = totalPrice;
     
-    // Add to cart
-    const cart = getCart();
-    cart.push(cartItem);
-    saveCart(cart);
-    
-    // Show toast notification
-    showToast('✅ Item added to cart!');
+        // Add to cart
+        const cart = getCart();
+        cart.push(cartItem);
+        saveCart(cart);
+        
+        // Show toast notification
+        showToast('✅ Item added to cart!');
+        
+    } catch (error) {
+        console.error('Error adding to cart:', error);
+        
+        let errorMessage = 'Error adding item to cart. Please try again.';
+        if (error.message.includes('Upload failed')) {
+            errorMessage = 'Failed to upload image to server. Please check your connection and try again.';
+        } else if (error.name === 'QuotaExceededError') {
+            errorMessage = 'Cart storage limit reached! Please complete your order or remove items.';
+        }
+        
+        alert(errorMessage);
+    } finally {
+        // Re-enable button
+        if (addToCartBtn) {
+            addToCartBtn.disabled = false;
+            addToCartBtn.textContent = 'ADD TO CART';
+        }
+    }
 }
 
 // Generate final framed image for download/cart
