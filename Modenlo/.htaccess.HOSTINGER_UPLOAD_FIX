@@ -1,0 +1,75 @@
+# Modenlo - Hostinger Shared Hosting (Upload Fix)
+# ============================================================
+# This .htaccess routes API requests to your Node.js server
+# WITHOUT using mod_proxy ProxyPass [P] flag
+# ============================================================
+
+RewriteEngine On
+
+# Force HTTPS
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+# Redirect www to non-www
+RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
+
+# ============================================================
+# STEP 1: FIND YOUR NODE.JS PORT
+# ============================================================
+# Go to Hostinger hPanel → Node.js → Your Application
+# Look for "Port" or "Application URL" 
+# Common ports: 3000, 20000-20099, 40000-40099
+# 
+# REPLACE "YOUR_PORT_HERE" below with your actual port number
+# Example: If port is 20045, change to:
+# RewriteRule ^api/(.*)$ http://127.0.0.1:20045/api/$1 [L]
+# ============================================================
+
+# Route all /api/* requests to Node.js (CONFIGURE PORT BELOW)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ http://127.0.0.1:YOUR_PORT_HERE/api/$1 [L]
+
+# ============================================================
+# HOW TO DEPLOY:
+# ============================================================
+# 1. Find your Node.js port in hPanel (see HOSTINGER_UPLOAD_FIX.md)
+# 2. Replace "YOUR_PORT_HERE" above with actual port number
+# 3. Rename this file to ".htaccess" (remove .HOSTINGER_UPLOAD_FIX)
+# 4. Upload to public_html/ via FTP
+# 5. Test: https://modenlo.com/api/health (should return JSON)
+# 6. Test upload: Add item to cart in framer tool
+# ============================================================
+
+# Serve static files directly (no processing needed)
+RewriteCond %{REQUEST_URI} \.(html|css|js|jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf|eot|pdf|txt)$ [NC]
+RewriteRule ^ - [L]
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# ============================================================
+# TROUBLESHOOTING:
+# ============================================================
+# If you get 404 on /api/health:
+# - Double check the port number is correct
+# - Ensure Node.js app is running in hPanel
+# - Check application logs in hPanel
+#
+# If you get 502 Bad Gateway:
+# - Port is wrong, verify in hPanel → Node.js
+# - Node.js app is stopped, restart it
+#
+# If upload still fails:
+# - Check browser console for error details
+# - Verify uploads/originals/ directory exists
+# - Check server logs in hPanel
+# ============================================================
