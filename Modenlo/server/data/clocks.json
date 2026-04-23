@@ -3,116 +3,57 @@
     {
       "id": "clock-10",
       "diameter": 10,
-      "price": 25,
+      "price": 17.95,
       "available": true,
       "hands": [
         {
           "id": "Black",
-          "name": "Black",
+          "name": "Black Clock Hands",
           "description": "Black",
           "price": 0
         }
       ],
       "frames": [
         {
-          "id": "Wooden",
-          "name": "Wooden",
-          "description": "Wooden",
+          "id": "Gray",
+          "name": "Gray",
+          "description": "Gray Clock Hands",
+          "price": 0
+        },
+        {
+          "id": "Gold",
+          "name": "Gold",
+          "description": "Gold Clock Hands",
           "price": 0
         }
       ]
     },
     {
       "id": "clock-12",
-      "diameter": 12,
-      "price": 49.99,
+      "diameter": 14,
+      "price": 24.95,
       "available": true,
       "hands": [
         {
-          "id": "classic",
-          "name": "Classic",
-          "description": "Traditional clock hands",
+          "id": "Black",
+          "name": "Black",
+          "description": "Black Clock Hands",
           "price": 0
         },
         {
-          "id": "modern",
-          "name": "Modern",
-          "description": "Sleek modern design",
-          "price": 5
-        },
-        {
-          "id": "vintage",
-          "name": "Vintage",
-          "description": "Antique style hands",
-          "price": 7.5
-        }
-      ],
-      "frames": [
-        {
-          "id": "wooden",
-          "name": "Wooden Frame",
-          "description": "Natural wood finish",
-          "price": 10
-        },
-        {
-          "id": "metal",
-          "name": "Metal Frame",
-          "description": "Brushed metal finish",
-          "price": 12
-        },
-        {
-          "id": "plastic",
-          "name": "Plastic Frame",
-          "description": "Lightweight plastic",
-          "price": 5
-        }
-      ]
-    },
-    {
-      "id": "clock-16",
-      "diameter": 16,
-      "price": 69.99,
-      "available": true,
-      "hands": [
-        {
-          "id": "classic",
-          "name": "Classic",
-          "description": "Traditional clock hands",
+          "id": "Gray",
+          "name": "Gray",
+          "description": "Gray Clock Hands",
           "price": 0
         },
         {
-          "id": "modern",
-          "name": "Modern",
-          "description": "Sleek modern design",
-          "price": 5
-        },
-        {
-          "id": "vintage",
-          "name": "Vintage",
-          "description": "Antique style hands",
-          "price": 7.5
+          "id": "Gold",
+          "name": "Gold",
+          "description": "Gold Clock Hands",
+          "price": 0
         }
       ],
-      "frames": [
-        {
-          "id": "wooden",
-          "name": "Wooden Frame",
-          "description": "Natural wood finish",
-          "price": 10
-        },
-        {
-          "id": "metal",
-          "name": "Metal Frame",
-          "description": "Brushed metal finish",
-          "price": 12
-        },
-        {
-          "id": "plastic",
-          "name": "Plastic Frame",
-          "description": "Lightweight plastic",
-          "price": 5
-        }
-      ]
+      "frames": []
     }
   ]
 }

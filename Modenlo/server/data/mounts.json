@@ -11,22 +11,17 @@
       "id": "aluminium-alloy",
       "name": "Aluminium Alloy Mount",
       "description": "Premium aluminium alloy mount for modern look",
-      "price": 25,
-      "available": true
-    },
-    {
-      "id": "aluminium-shadow",
-      "name": "Aluminium Shadow Mount",
-      "description": "Aluminium mount with shadow effect for depth",
-      "price": 35,
-      "available": true
+      "price": 15,
+      "available": true,
+      "thumbnail": "/uploads/mounts/mount-1776919881071-952326054.png"
     },
     {
       "id": "wood-natural",
       "name": "Natural Wood Mount",
       "description": "Classic natural wood mount finish",
-      "price": 30,
-      "available": true
+      "price": 5,
+      "available": true,
+      "thumbnail": "/uploads/mounts/mount-1776919891477-455774662.png"
     },
     {
       "id": "wood-black",
@@ -46,17 +41,16 @@
       "id": "easel",
       "name": "Easel",
       "description": "Easel Tabletop",
-      "price": 15,
+      "price": 5,
       "available": true,
-      "thumbnail": "/uploads/mounts/mount-1761746402445-730689782.JPEG"
+      "thumbnail": "/uploads/mounts/mount-1776919909821-735099224.png"
     },
     {
-      "id": "bamboo",
-      "name": "Bamboo",
-      "description": "Bamboo Mount",
-      "price": 15,
-      "available": true,
-      "thumbnail": "/uploads/mounts/mount-1762004341428-912683449.jpg"
+      "id": "magnetic-sheet",
+      "name": "Magnetic Sheet",
+      "description": "Magnetic Sheet Mount",
+      "price": 10,
+      "available": true
     }
   ]
 }
