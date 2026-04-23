@@ -1,12 +1,8 @@
-RewriteEngine On
+# Hostinger Node.js Deployment Configuration
+# The Express server handles ALL requests (static files + API routes)
+# No special .htaccess rules needed - Hostinger routes domain directly to Node.js app
 
-# Keep real files/folders working
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
-
-# Leave API paths untouched
-RewriteRule ^api/ - [L]
-
-# Send everything else to the SPA entry point
-RewriteRule ^ index.html [L]
+# Optional: Force HTTPS (if not already handled by Hostinger)
+# RewriteEngine On
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
