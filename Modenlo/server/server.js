@@ -1855,8 +1855,9 @@ app.get('/api/check-uploads', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, async () => {
+app.listen(PORT, '0.0.0.0', async () => {
     console.log(`Modenlo API server running on port ${PORT}`);
+    console.log(`Server bound to 0.0.0.0 (accessible from network)`);
     console.log(`Landing Page: http://localhost:${PORT}/`);
     console.log(`Modenlo Tool: http://localhost:${PORT}/framer.html`);
     console.log(`Admin Panel: http://localhost:${PORT}/admin.html`);
