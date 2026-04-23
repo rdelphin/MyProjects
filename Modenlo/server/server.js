@@ -59,16 +59,27 @@ const upload = multer({
 const originalsStorage = multer.diskStorage({
     destination: async function (req, file, cb) {
         try {
+            console.log(`[UPLOAD] Creating directory: ${ORIGINALS_DIR}`);
             // Create originals directory if it doesn't exist
             await fs.mkdir(ORIGINALS_DIR, { recursive: true });
+            console.log(`[UPLOAD] Directory ready: ${ORIGINALS_DIR}`);
+            
+            // Verify directory is writable
+            await fs.access(ORIGINALS_DIR, fs.constants.W_OK);
+            console.log(`[UPLOAD] Directory is writable`);
+            
             cb(null, ORIGINALS_DIR);
         } catch (error) {
+            console.error(`[UPLOAD] Error setting up destination:`, error);
+            console.error(`[UPLOAD] Attempted path: ${ORIGINALS_DIR}`);
+            console.error(`[UPLOAD] Current directory: ${__dirname}`);
             cb(error);
         }
     },
     filename: function (req, file, cb) {
         // Generate unique filename with timestamp
         const imageId = `original-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        console.log(`[UPLOAD] Generated filename: ${imageId}.png`);
         cb(null, `${imageId}.png`);
     }
 });
@@ -1724,8 +1735,127 @@ app.get('/api/download/:orderId/:token', async (req, res) => {
 });
 
 
+// Startup validation - Check and create upload directories
+async function validateUploadDirectories() {
+    console.log('\n📁 Validating upload directories...');
+    
+    const directories = [
+        { path: UPLOADS_DIR, name: 'Mounts directory' },
+        { path: ORIGINALS_DIR, name: 'Originals directory' }
+    ];
+    
+    for (const dir of directories) {
+        try {
+            // Try to access the directory
+            await fs.access(dir.path);
+            console.log(`✓ ${dir.name} exists: ${dir.path}`);
+            
+            // Check if writable
+            await fs.access(dir.path, fs.constants.W_OK);
+            console.log(`✓ ${dir.name} is writable`);
+            
+        } catch (error) {
+            console.log(`✗ ${dir.name} not found, creating...`);
+            try {
+                await fs.mkdir(dir.path, { recursive: true });
+                console.log(`✓ ${dir.name} created successfully: ${dir.path}`);
+            } catch (mkdirError) {
+                console.error(`✗ Failed to create ${dir.name}:`, mkdirError);
+                console.error(`  Path attempted: ${dir.path}`);
+                console.error(`  This may cause upload failures!`);
+            }
+        }
+    }
+    console.log('📁 Upload directories validation complete\n');
+}
+
+// Diagnostic endpoint for upload system
+app.get('/api/check-uploads', async (req, res) => {
+    try {
+        const diagnostics = {
+            timestamp: new Date().toISOString(),
+            environment: process.env.NODE_ENV || 'development',
+            directories: {}
+        };
+        
+        // Check mounts directory
+        try {
+            await fs.access(UPLOADS_DIR);
+            const stats = await fs.stat(UPLOADS_DIR);
+            diagnostics.directories.mounts = {
+                path: UPLOADS_DIR,
+                exists: true,
+                isDirectory: stats.isDirectory()
+            };
+            
+            try {
+                await fs.access(UPLOADS_DIR, fs.constants.W_OK);
+                diagnostics.directories.mounts.writable = true;
+            } catch {
+                diagnostics.directories.mounts.writable = false;
+            }
+        } catch {
+            diagnostics.directories.mounts = {
+                path: UPLOADS_DIR,
+                exists: false,
+                writable: false
+            };
+        }
+        
+        // Check originals directory
+        try {
+            await fs.access(ORIGINALS_DIR);
+            const stats = await fs.stat(ORIGINALS_DIR);
+            diagnostics.directories.originals = {
+                path: ORIGINALS_DIR,
+                exists: true,
+                isDirectory: stats.isDirectory()
+            };
+            
+            try {
+                await fs.access(ORIGINALS_DIR, fs.constants.W_OK);
+                diagnostics.directories.originals.writable = true;
+                
+                // Count files in directory
+                const files = await fs.readdir(ORIGINALS_DIR);
+                diagnostics.directories.originals.fileCount = files.length;
+            } catch {
+                diagnostics.directories.originals.writable = false;
+            }
+        } catch {
+            diagnostics.directories.originals = {
+                path: ORIGINALS_DIR,
+                exists: false,
+                writable: false
+            };
+        }
+        
+        // Overall status
+        const allOk = diagnostics.directories.mounts?.writable && 
+                      diagnostics.directories.originals?.writable;
+        
+        diagnostics.status = allOk ? 'healthy' : 'issues_detected';
+        diagnostics.message = allOk 
+            ? 'All upload directories are properly configured'
+            : 'Some upload directories have issues - check details above';
+        
+        res.json({
+            success: true,
+            ...diagnostics
+        });
+        
+    } catch (error) {
+        console.error('[DIAGNOSTICS] Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            stack: error.stack
+        });
+    }
+});
+
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`Modenlo API server running on port ${PORT}`);
     console.log(`Landing Page: http://localhost:${PORT}/`);
     console.log(`Modenlo Tool: http://localhost:${PORT}/framer.html`);
@@ -1734,4 +1864,7 @@ app.listen(PORT, () => {
     console.log(`\n📧 Email Configuration:`);
     console.log(`Set EMAIL_USER and EMAIL_PASS environment variables to enable email notifications`);
     console.log(`Set ADMIN_EMAIL environment variable to receive order notifications`);
+    
+    // Validate upload directories on startup
+    await validateUploadDirectories();
 });
