@@ -1,0 +1,17 @@
+RewriteEngine On
+
+# Proxy API requests to Node.js subdomain
+# Replace YOURAPP with your actual Hostinger Node.js application subdomain
+# Example: modenlo-12345.hostingersite.com
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^(.*)$ https://YOURAPP.hostingersite.com/$1 [P,L]
+
+# Serve static files directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Fallback
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /$1 [L]

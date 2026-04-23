@@ -1,0 +1,15 @@
+RewriteEngine On
+
+# Proxy API requests to Node.js application (port 3000)
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+
+# Serve static files directly (images, CSS, JS, HTML)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Fallback: serve index.html for any other requests
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /$1 [L]
