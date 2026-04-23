@@ -1854,7 +1854,6 @@ app.get('/api/check-uploads', async (req, res) => {
     }
 });
 
-
 // Start server
 app.listen(PORT, '0.0.0.0', async () => {
     console.log(`Modenlo API server running on port ${PORT}`);
