@@ -1854,6 +1854,16 @@ app.get('/api/check-uploads', async (req, res) => {
     }
 });
 
+// Roger D Add this
+const upload = multer({ dest: 'uploads/' });
+
+app.post('/api/upload-image', upload.single('image'), (req, res) => {
+ res.json({ success: true });
+});
+
+// end Roger D Add this
+
+
 // Start server
 app.listen(PORT, '0.0.0.0', async () => {
     console.log(`Modenlo API server running on port ${PORT}`);
