@@ -4,8 +4,8 @@
 if (typeof API_BASE === 'undefined') {
     //var API_BASE = `${window.location.origin}/api`;
     var API_BASE = window.location.hostname === "localhost"
-    ? "http://localhost:3000/api"
-    : "https://api.modenlo.com/api";
+    ? "http://localhost:3000/"
+    : "https://modenlo.com/";
 }
 
 // Frame size configurations (will be loaded from API)
