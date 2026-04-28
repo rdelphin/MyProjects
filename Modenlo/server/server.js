@@ -143,19 +143,41 @@ const corsOptions = {
             'http://www.modenlo.com'
           ]
         : true,
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'x-session-id', 'X-Requested-With', 'Accept', 'Origin'],
+    maxAge: 86400 // 24 hours - cache preflight for mobile browsers
 };
 app.use(cors(corsOptions));
 
-// Log CORS errors for debugging
+// Enhanced CORS middleware for mobile browser compatibility
 app.use((req, res, next) => {
     const origin = req.headers.origin;
-    if (origin && process.env.NODE_ENV === 'production') {
-        const allowedOrigins = corsOptions.origin;
-        if (!allowedOrigins.includes(origin)) {
-            console.warn('[CORS] Blocked request from origin:', origin);
+    const allowedOrigins = [
+        'https://modenlo.com',
+        'http://modenlo.com',
+        'https://www.modenlo.com',
+        'http://www.modenlo.com'
+    ];
+    
+    // In development, allow all origins; in production, check whitelist
+    if (process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin)) {
+        if (origin) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
         }
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-session-id, X-Requested-With, Accept, Origin');
+        res.setHeader('Access-Control-Max-Age', '86400');
+    } else if (origin) {
+        console.warn('[CORS] Blocked request from origin:', origin);
     }
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    
     next();
 });
 // Increase body size limit to handle large image data (50MB)

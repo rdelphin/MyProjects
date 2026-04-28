@@ -29,7 +29,10 @@ async function checkAdminSession() {
             headers['x-session-id'] = sessionId;
         }
         
-        const response = await fetch(`${API_BASE}/auth/session`, { headers });
+        const response = await fetch(`${API_BASE}/auth/session`, { 
+            headers,
+            credentials: 'include' // Ensure credentials are sent for mobile browsers
+        });
         const data = await response.json();
         
         if (data.success && data.isAdmin) {
@@ -70,6 +73,7 @@ async function loginAsAdmin(username, password) {
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'include', // Ensure credentials are sent for mobile browsers
             body: JSON.stringify({ username, password })
         });
         
@@ -121,7 +125,8 @@ function setupEventListeners() {
 async function loadFrames() {
     try {
         const response = await fetch(`${API_BASE}/admin/frames`, {
-            headers: getAuthHeaders()
+            headers: getAuthHeaders(),
+            credentials: 'include' // Ensure credentials are sent for mobile browsers
         });
         const data = await response.json();
         
@@ -186,6 +191,7 @@ async function handleAddFrame(e) {
         const response = await fetch(`${API_BASE}/admin/frames`, {
             method: 'POST',
             headers: getAuthHeaders(),
+            credentials: 'include', // Ensure credentials are sent for mobile browsers
             body: JSON.stringify(formData)
         });
         
@@ -208,7 +214,8 @@ async function handleAddFrame(e) {
 async function openEditModal(frameId) {
     try {
         const response = await fetch(`${API_BASE}/admin/frames`, {
-            headers: getAuthHeaders()
+            headers: getAuthHeaders(),
+            credentials: 'include' // Ensure credentials are sent for mobile browsers
         });
         const data = await response.json();
         
@@ -251,6 +258,7 @@ async function handleEditFrame(e) {
         const response = await fetch(`${API_BASE}/admin/frames/${frameId}`, {
             method: 'PUT',
             headers: getAuthHeaders(),
+            credentials: 'include', // Ensure credentials are sent for mobile browsers
             body: JSON.stringify(formData)
         });
         
@@ -275,6 +283,7 @@ async function toggleAvailability(frameId, available) {
         const response = await fetch(`${API_BASE}/admin/frames/${frameId}/availability`, {
             method: 'PATCH',
             headers: getAuthHeaders(),
+            credentials: 'include', // Ensure credentials are sent for mobile browsers
             body: JSON.stringify({ available })
         });
         
@@ -301,7 +310,8 @@ async function deleteFrame(frameId) {
     try {
         const response = await fetch(`${API_BASE}/admin/frames/${frameId}`, {
             method: 'DELETE',
-            headers: getAuthHeaders()
+            headers: getAuthHeaders(),
+            credentials: 'include' // Ensure credentials are sent for mobile browsers
         });
         
         const data = await response.json();
