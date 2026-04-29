@@ -52,8 +52,8 @@ const photoCanvas = document.getElementById('photoCanvas');
 const ctx = photoCanvas.getContext('2d');
 const cropOverlay = document.getElementById('cropOverlay');
 const cropCtx = cropOverlay.getContext('2d');
-const frameSizeSelect = document.getElementById('frameSize');
-const orientationSelect = document.getElementById('orientationSelect');
+const sizeButtonGrid = document.getElementById('sizeButtonGrid');
+const orientationButtons = document.querySelectorAll('.orientation-btn');
 const zoomSlider = document.getElementById('zoomSlider');
 const zoomValue = document.getElementById('zoomValue');
 const resetPositionBtn = document.getElementById('resetPosition');
@@ -411,16 +411,36 @@ function useFallbackFrames() {
     updatePriceDisplay();
 }
 
-// Populate frame size dropdown
-function populateFrameDropdown(frames) {
-    frameSizeSelect.innerHTML = frames.map(frame => 
-        `<option value="${frame.id}">${frame.size}" - $${frame.price.toFixed(2)}</option>`
-    ).join('');
+// Populate frame size button grid
+function populateSizeButtons(frames) {
+    if (!sizeButtonGrid) return;
     
-    // Set selected value
-    if (frames.find(f => f.id === state.frameSize)) {
-        frameSizeSelect.value = state.frameSize;
+    sizeButtonGrid.innerHTML = frames.map(frame => {
+        const isActive = frame.id === state.frameSize;
+        return `
+            <button class="size-btn ${isActive ? 'active' : ''}" data-size-id="${frame.id}">
+                <span class="size-btn-label">${frame.size}"</span>
+                <span class="size-btn-price">$${frame.price.toFixed(2)}</span>
+            </button>
+        `;
+    }).join('');
+    
+    // Add click event listeners
+    sizeButtonGrid.querySelectorAll('.size-btn').forEach(btn => {
+        btn.addEventListener('click', handleSizeButtonClick);
+    });
+}
+
+// Populate frame size dropdown (kept for clocks - they use dropdown still)
+function populateFrameDropdown(frames) {
+    // For clocks, use the size button grid instead
+    if (isClock()) {
+        populateSizeButtons(frames);
+        return;
     }
+    
+    // For regular frames, use button grid
+    populateSizeButtons(frames);
 }
 
 // Update price display
@@ -677,6 +697,76 @@ function toggleSectionVisibility() {
     }
 }
 
+// Handle size button click
+function handleSizeButtonClick(e) {
+    const btn = e.currentTarget;
+    const sizeId = btn.dataset.sizeId;
+    
+    // Update state
+    state.frameSize = sizeId;
+    
+    // Update UI - remove active class from all and add to clicked
+    if (sizeButtonGrid) {
+        sizeButtonGrid.querySelectorAll('.size-btn').forEach(button => {
+            button.classList.remove('active');
+        });
+    }
+    btn.classList.add('active');
+    
+    // For clocks: reload hands and frame options when size changes
+    if (isClock() && FRAME_SIZES[state.frameSize]) {
+        state.currentClockData = FRAME_SIZES[state.frameSize].clockData;
+        if (state.currentClockData) {
+            loadClockHands(state.currentClockData);
+            loadClockFrameOptions(state.currentClockData);
+        }
+    }
+    
+    // Update canvas if image is loaded
+    if (state.uploadedImage) {
+        updateCanvas();
+        checkResolution();
+    }
+    
+    // Update price display
+    updatePriceDisplay();
+}
+
+// Handle orientation button click
+function handleOrientationButtonClick(e) {
+    const btn = e.currentTarget;
+    const orientation = btn.dataset.orientation;
+    
+    // Ignore if button is disabled
+    if (btn.disabled) return;
+    
+    // Update state
+    state.orientation = orientation;
+    
+    // Update UI - remove active class from all and add to clicked
+    document.querySelectorAll('.orientation-btn').forEach(button => {
+        button.classList.remove('active');
+    });
+    btn.classList.add('active');
+    
+    // Update canvas if image is loaded
+    if (state.uploadedImage) {
+        updateCanvas();
+        checkResolution();
+    }
+}
+
+// Update orientation button UI without triggering events
+function updateOrientationButtons() {
+    document.querySelectorAll('.orientation-btn').forEach(btn => {
+        if (btn.dataset.orientation === state.orientation) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+}
+
 // Initialize event listeners
 function init() {
     // Check user session
@@ -694,26 +784,29 @@ function init() {
     const displayType = getDisplayType();
     if (displayType === 'mousepad') {
         state.orientation = 'landscape';
-        if (orientationSelect) {
-            orientationSelect.value = 'landscape';
-            orientationSelect.disabled = true;
-            orientationSelect.style.opacity = '0.6';
-            orientationSelect.style.cursor = 'not-allowed';
-        }
+        // Disable landscape button for mousepads
+        orientationButtons.forEach(btn => {
+            if (btn.dataset.orientation === 'portrait') {
+                btn.disabled = true;
+            }
+        });
     }
+    
+    // Set up orientation button listeners
+    orientationButtons.forEach(btn => {
+        btn.addEventListener('click', handleOrientationButtonClick);
+    });
+    
+    // Update orientation buttons to match initial state
+    updateOrientationButtons();
     
     // Load frames/clocks and mounts from API based on product type
     if (isClock()) {
         loadClocks();
-        // Disable orientation for clocks since they're always circular
-        if (orientationSelect) {
-            orientationSelect.disabled = true;
-            orientationSelect.style.display = 'none';
-            // Also hide the label
-            const orientationLabel = orientationSelect.previousElementSibling;
-            if (orientationLabel && orientationLabel.classList.contains('form-label')) {
-                orientationLabel.style.display = 'none';
-            }
+        // Hide orientation section for clocks since they're always circular
+        const orientationSection = document.querySelector('.orientation-buttons')?.closest('.form-section');
+        if (orientationSection) {
+            orientationSection.style.display = 'none';
         }
     } else {
         loadFrames();
@@ -731,10 +824,6 @@ function init() {
     }
     
     // Controls
-    frameSizeSelect.addEventListener('change', handleFrameSizeChange);
-    if (orientationSelect) {
-        orientationSelect.addEventListener('change', handleOrientationSelectChange);
-    }
     zoomSlider.addEventListener('input', handleZoomChange);
     resetPositionBtn.addEventListener('click', resetPosition);
     
@@ -961,15 +1050,15 @@ function loadImage(file) {
 function detectImageOrientation(img) {
     const displayType = getDisplayType();
     
-    // For Mouse Pad, always use landscape and disable orientation selector
+    // For Mouse Pad, always use landscape and disable portrait button
     if (displayType === 'mousepad') {
         state.orientation = 'landscape';
-        if (orientationSelect) {
-            orientationSelect.value = 'landscape';
-            orientationSelect.disabled = true;
-            orientationSelect.style.opacity = '0.6';
-            orientationSelect.style.cursor = 'not-allowed';
-        }
+        orientationButtons.forEach(btn => {
+            if (btn.dataset.orientation === 'portrait') {
+                btn.disabled = true;
+            }
+        });
+        updateOrientationButtons();
         return;
     }
     
@@ -979,23 +1068,19 @@ function detectImageOrientation(img) {
     if (imgAspect > 1) {
         // Image is wider than tall - suggest landscape
         state.orientation = 'landscape';
-        updateOrientationSelectUI();
     } else {
         // Image is taller than wide - suggest portrait
         state.orientation = 'portrait';
-        updateOrientationSelectUI();
     }
+    
+    // Update orientation buttons to reflect the detected orientation
+    updateOrientationButtons();
 }
 
-// Update orientation select dropdown UI
+// Update orientation select dropdown UI (legacy compatibility - now updates buttons)
 function updateOrientationSelectUI() {
-    if (orientationSelect) {
-        orientationSelect.value = state.orientation;
-        // Re-enable if it was disabled (in case user switches product types)
-        orientationSelect.disabled = false;
-        orientationSelect.style.opacity = '1';
-        orientationSelect.style.cursor = 'pointer';
-    }
+    // Update the new orientation button UI
+    updateOrientationButtons();
 }
 
 // Setup canvas size
@@ -1061,7 +1146,7 @@ function handleFrameSizeChange(e) {
 
 function handleZoomChange(e) {
     state.currentZoom = parseInt(e.target.value);
-    zoomValue.textContent = state.currentZoom;
+    zoomValue.textContent = state.currentZoom + '%';
     updateCanvas();
 }
 
@@ -1069,7 +1154,7 @@ function resetPosition() {
     state.imagePosition = { x: 0, y: 0 };
     state.currentZoom = 100;
     zoomSlider.value = 100;
-    zoomValue.textContent = 100;
+    zoomValue.textContent = '100%';
     updateCanvas();
 }
 

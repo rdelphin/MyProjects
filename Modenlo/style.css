@@ -495,6 +495,240 @@ body {
 }
 
 /* ================================================
+   SIZE BUTTON GRID - MODERN SELECTION
+   ================================================ */
+
+.size-button-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--space-3);
+}
+
+.size-btn {
+    background: var(--background);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    min-height: 80px;
+}
+
+.size-btn:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.size-btn.active {
+    border-color: var(--primary);
+    background: rgba(16, 185, 129, 0.05);
+    border-width: 3px;
+}
+
+.size-btn.active::after {
+    content: '✓';
+    position: absolute;
+    top: var(--space-2);
+    right: var(--space-2);
+    width: 20px;
+    height: 20px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.size-btn-label {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+
+.size-btn-price {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+/* ================================================
+   ORIENTATION ICON BUTTONS
+   ================================================ */
+
+.orientation-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+}
+
+.orientation-btn {
+    background: var(--background);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--text-secondary);
+}
+
+.orientation-btn:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.orientation-btn.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+    border-width: 3px;
+}
+
+.orientation-btn svg {
+    stroke: currentColor;
+}
+
+.orientation-btn span {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.orientation-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ================================================
+   ZOOM CONTROL WITH ICON RESET
+   ================================================ */
+
+.zoom-control-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.zoom-control-wrapper .zoom-slider {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.reset-icon-btn {
+    background: var(--background);
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    color: var(--text-secondary);
+}
+
+.reset-icon-btn:hover {
+    border-color: var(--blue-primary);
+    color: var(--blue-primary);
+    background: rgba(59, 130, 246, 0.05);
+    transform: rotate(-45deg);
+}
+
+.reset-icon-btn:active {
+    transform: rotate(-45deg) scale(0.95);
+}
+
+.reset-icon-btn svg {
+    stroke: currentColor;
+}
+
+/* ================================================
+   STICKY ADD TO CART CTA
+   ================================================ */
+
+.sticky-cta-wrapper {
+    margin-top: var(--space-10);
+    padding-top: var(--space-8);
+    border-top: 2px solid var(--border-color);
+}
+
+.add-to-cart-cta {
+    width: 100%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: var(--space-5) var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 700;
+    font-size: 1.125rem;
+    box-shadow: var(--shadow-lg);
+    letter-spacing: 0.025em;
+}
+
+.add-to-cart-cta:hover:not(:disabled) {
+    background: var(--primary-dark);
+    transform: translateY(-3px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+}
+
+.add-to-cart-cta:active:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.add-to-cart-cta:disabled {
+    background: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.cta-text {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.cta-price {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    font-weight: 700;
+}
+
+.cta-currency {
+    font-size: 1rem;
+}
+
+.cta-amount {
+    font-size: 1.5rem;
+}
+
+.cta-cents {
+    font-size: 1rem;
+}
+
+/* ================================================
    MOUNT OPTIONS - IMAGE FOCUSED DESIGN
    ================================================ */
 
@@ -875,6 +1109,40 @@ body {
     }
 }
 
+/* Mobile Sticky CTA */
+@media (max-width: 1024px) {
+    .sticky-cta-wrapper {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        padding: var(--space-4) var(--space-5);
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        margin-top: 0;
+    }
+    
+    .add-to-cart-cta {
+        font-size: 1rem;
+    }
+    
+    .cta-amount {
+        font-size: 1.25rem;
+    }
+    
+    /* Add padding to order-form-col to prevent content from hiding behind sticky button */
+    .order-form-col {
+        padding-bottom: 120px;
+    }
+    
+    /* Size button grid - 2 columns on mobile */
+    .size-button-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 360px) {
     .order-title {
         font-size: 1.25rem;
@@ -887,5 +1155,18 @@ body {
     .add-to-cart-main {
         padding: 0.875rem var(--space-4);
         font-size: 0.9rem;
+    }
+    
+    .sticky-cta-wrapper {
+        padding: var(--space-3) var(--space-4);
+    }
+    
+    .add-to-cart-cta {
+        font-size: 0.95rem;
+        padding: var(--space-4) var(--space-5);
+    }
+    
+    .cta-text {
+        font-size: 0.875rem;
     }
 }
